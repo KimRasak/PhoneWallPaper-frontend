@@ -3,68 +3,98 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
+import com.aspsine.swipetoloadlayout.SwipeToLoadLayout;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link RepoFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link RepoFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class RepoFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+import java.io.IOException;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
+public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
     private OnFragmentInteractionListener mListener;
+    WallPaperRecyclerViewAdapter adapter;
+    private int RV_COLUMN_WIDTH = 300; // recyclerView的图片宽度为300px，高度为520px（在item_wallpaper.xml里设置）。
 
     public RepoFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment RepoFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static RepoFragment newInstance(String param1, String param2) {
         RepoFragment fragment = new RepoFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_repo, container, false);
+        View view = inflater.inflate(R.layout.fragment_repo, container, false);
+
+        final SwipeToLoadLayout wallpaper_swipe_layout = view.findViewById(R.id.wallpaper_swipe_layout);
+        LoadMoreFooterView swipe_load_more_footer = view.findViewById(R.id.swipe_load_more_footer);
+        wallpaper_swipe_layout.setLoadMoreFooterView(swipe_load_more_footer);
+        // 设置recyclerView
+        // RecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
+
+        AutofitRecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
+        adapter = new WallPaperRecyclerViewAdapter(view.getContext());
+        adapter.setClickListener(this);
+        rv_wallpapers.setAdapter(adapter);
+
+        // 上拉刷新
+        wallpaper_swipe_layout.setOnLoadMoreListener(new OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                int limit = 20;
+                int skip = 10;
+                String url = "http://www.baidu.com";
+                OkHttpClient okHttpClient = new OkHttpClient();
+
+                RequestBody formBody = new FormBody.Builder()
+                        .add("category", "美女")
+                        .add("sort", "hot")
+                        .add("limit", String.valueOf(limit))
+                        .add("skip", String.valueOf(skip))
+                        .build();
+                Request request = new Request.Builder().url(url).post(formBody).build();
+                okhttp3.Response response = null;
+                okHttpClient.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        Log.i("RepoFragment", response.body().string());
+                        wallpaper_swipe_layout.setLoadingMore(false);
+                    }
+                });
+            }
+        });
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -91,18 +121,13 @@ public class RepoFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    @Override
+    public void onItemClick(View view, int position) {
+        Log.i("fragment", "click: " + position);
+        Toast.makeText(view.getContext(), "click: " + position, Toast.LENGTH_SHORT).show();
+    }
+
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 }

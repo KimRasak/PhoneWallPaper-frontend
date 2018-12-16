@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<com.aspsine.swipetoloadlayout.SwipeToLoadLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/wallpaper_swipe_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".RepoFragment">
+    android:layout_height="match_parent">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView
+        android:id="@+id/swipe_target"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="repo page"
-        android:textColor="@color/colorAccent"/>
+        android:layout_height="match_parent"/>
 
-</FrameLayout>
+    <jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView
+        android:id="@id/swipe_load_more_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="loading..."/>
+
+</com.aspsine.swipetoloadlayout.SwipeToLoadLayout>
