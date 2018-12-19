@@ -18,11 +18,19 @@ import android.widget.Toast;
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
 import com.aspsine.swipetoloadlayout.SwipeToLoadLayout;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -32,7 +40,8 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
     private OnFragmentInteractionListener mListener;
     WallPaperRecyclerViewAdapter adapter;
     private int RV_COLUMN_WIDTH = 300; // recyclerView的图片宽度为300px，高度为520px（在item_wallpaper.xml里设置）。
-
+    public static final MediaType FORM_CONTENT_TYPE
+            = MediaType.parse("application/json; charset=utf-8");
     public RepoFragment() {
         // Required empty public constructor
     }
@@ -59,7 +68,8 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         // RecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
 
         AutofitRecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
-        adapter = new WallPaperRecyclerViewAdapter(view.getContext());
+        ArrayList<WallPaperDataItem> wallPaperDataItems = new ArrayList<>();
+        adapter = new WallPaperRecyclerViewAdapter(view.getContext(), wallPaperDataItems);
         adapter.setClickListener(this);
         rv_wallpapers.setAdapter(adapter);
 
@@ -67,29 +77,60 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         wallpaper_swipe_layout.setOnLoadMoreListener(new OnLoadMoreListener() {
             @Override
             public void onLoadMore() {
-                int limit = 20;
-                int skip = 10;
-                String url = "http://www.baidu.com";
+                String category = "美女";
+                int pageNum = 20;
+                String url = "http://192.168.31.246:9090/wallpaper/list"; // 手机应当连接本地wifi，并访问pc的本地ip
+                int pageSize = 10;
                 OkHttpClient okHttpClient = new OkHttpClient();
-
-                RequestBody formBody = new FormBody.Builder()
-                        .add("category", "美女")
-                        .add("sort", "hot")
-                        .add("limit", String.valueOf(limit))
-                        .add("skip", String.valueOf(skip))
-                        .build();
-                Request request = new Request.Builder().url(url).post(formBody).build();
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("category", category);
+                    jsonObject.put("sort", "hot");
+                    jsonObject.put("pageNum", String.valueOf(pageNum));
+                    jsonObject.put("pageSize", String.valueOf(pageSize));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.i("RepoFragment", jsonObject.toString());
+                // application/json
+                RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, jsonObject.toString());
+                Request request = new Request.Builder().url(url).post(requestBody).build();
                 okhttp3.Response response = null;
                 okHttpClient.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
+                        Log.e("RepoFragment", e.getMessage());
+                        e.printStackTrace();
+                        wallpaper_swipe_layout.setLoadingMore(false);
 
                     }
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        Log.i("RepoFragment", response.body().string());
-                        wallpaper_swipe_layout.setLoadingMore(false);
+                        try {
+                            String responseString = response.body().string();
+                            JSONArray values = new JSONArray(responseString);
+                            for (int i = 0; i < values.length(); i++) {
+                                JSONObject item = values.getJSONObject(i);
+                                String id = item.getString("id");
+                                String category = item.getString("category");
+                                String imgSrc = item.getString("path");
+                                WallPaperDataItem dataItem = new WallPaperDataItem(id, category, imgSrc);
+                                adapter.addDataItem(dataItem);
+                            }
+                            Log.i("RepoFragment", "values length: " + values.length());
+                            Log.i("RepoFragment", responseString);
+                            wallpaper_swipe_layout.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.i("RepoFragment", "notifyDataSetChanged");
+                                    adapter.notifyDataSetChanged();
+                                    wallpaper_swipe_layout.setLoadingMore(false);
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             }

@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
@@ -147,7 +148,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
                 try {
                     String access_token = values.getString("access_token");
                     String open_id = values.getString("openid");
-                    String expires_in = values.getString("expires_in");
+                    String expires_in = values.getString("expires_in"); // 90天
+                    String expires_time = values.getString("expires_time"); // 90天后的时间
+                    Log.i("logInfo", String.format("token: %s, id: %s, expires: %s, expires_time: %s", access_token, open_id, expires_in, expires_time));
 
                     helper.setQQInfo(open_id, access_token, expires_in);
                     helper.setQQLogStatusLocally(MainActivity.this, true);
@@ -157,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
                 // helper.getQQUserInfo(MainActivity.this, listener);
             }
         };
-        helper.logInQQ(MainActivity.this, listener);;
+        helper.logInQQ(MainActivity.this, listener);
     }
 
     private class LoginListener implements IUiListener {
