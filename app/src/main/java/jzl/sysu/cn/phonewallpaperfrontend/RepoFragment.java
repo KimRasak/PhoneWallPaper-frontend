@@ -39,6 +39,11 @@ import okhttp3.Response;
 public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
     private OnFragmentInteractionListener mListener;
     WallPaperRecyclerViewAdapter adapter;
+
+
+    private static final String HOME_PC_IP = "192.168.31.246";
+    private static final String SCHOOL_PC_IP = "192.168.199.181";
+    private static final String WALLPAPER_LIST_URL = "http://" + SCHOOL_PC_IP +":9090/wallpaper/list";
     private int RV_COLUMN_WIDTH = 300; // recyclerView的图片宽度为300px，高度为520px（在item_wallpaper.xml里设置）。
     public static final MediaType FORM_CONTENT_TYPE
             = MediaType.parse("application/json; charset=utf-8");
@@ -68,8 +73,12 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         // RecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
 
         AutofitRecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
+        rv_wallpapers.setHasFixedSize(true);
+
+        // 设置adapter
+        int spanCount = rv_wallpapers.getSpanCount();
         ArrayList<WallPaperDataItem> wallPaperDataItems = new ArrayList<>();
-        adapter = new WallPaperRecyclerViewAdapter(view.getContext(), wallPaperDataItems);
+        adapter = new WallPaperRecyclerViewAdapter(view.getContext(), wallPaperDataItems, spanCount);
         adapter.setClickListener(this);
         rv_wallpapers.setAdapter(adapter);
 
@@ -79,7 +88,7 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
             public void onLoadMore() {
                 String category = "美女";
                 int pageNum = 20;
-                String url = "http://192.168.31.246:9090/wallpaper/list"; // 手机应当连接本地wifi，并访问pc的本地ip
+                String url = WALLPAPER_LIST_URL; // 手机应当连接本地wifi，并访问pc的本地ip
                 int pageSize = 10;
                 OkHttpClient okHttpClient = new OkHttpClient();
                 JSONObject jsonObject = new JSONObject();
@@ -123,7 +132,7 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
                             wallpaper_swipe_layout.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.i("RepoFragment", "notifyDataSetChanged");
+                                    Log.i("RepoFragment", "notifyDataSetChanged. Adpater data size: " + adapter.getItemCount());
                                     adapter.notifyDataSetChanged();
                                     wallpaper_swipe_layout.setLoadingMore(false);
                                 }
@@ -165,7 +174,8 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
     @Override
     public void onItemClick(View view, int position) {
         Log.i("fragment", "click: " + position);
-        Toast.makeText(view.getContext(), "click: " + position, Toast.LENGTH_SHORT).show();
+        boolean image_loaded = adapter.getItem(position).getImgBytes() != null;
+        Toast.makeText(view.getContext(), "click: " + position + " image loaded: " + image_loaded  + "." + view.getWidth() + " " + view.getHeight(), Toast.LENGTH_SHORT).show();
     }
 
     public interface OnFragmentInteractionListener {
