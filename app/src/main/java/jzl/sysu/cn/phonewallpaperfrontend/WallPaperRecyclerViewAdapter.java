@@ -27,9 +27,7 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
     private ItemClickListener mClickListener;
 
     private int spanCount;
-    private int imgWidth;
-    private int imgHeight;
-    // data is passed into the constructor
+
     WallPaperRecyclerViewAdapter(Context context, ArrayList<WallPaperDataItem> data, int spanCount) {
         this.context = context;
         this.mInflater = LayoutInflater.from(context);
@@ -37,39 +35,26 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         this.spanCount = spanCount;
     }
 
-    // inflates the cell layout from xml when needed
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.item_wallpaper, parent, false);
-        int parentW = parent.getMeasuredWidth();
-        int parentH = parent.getMeasuredHeight();
-        int lWidth = view.getLayoutParams().width;
-
-
-        int margin = 1;
-        float pxMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, margin * 4,context.getResources().getDisplayMetrics());
-        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / 3); // 宽比高=1.5:1，每行两个图，margin有4dp，但此处按
+        int margin = 1; // margin是1dp。
+        float pxMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, margin * spanCount * 2,context.getResources().getDisplayMetrics()); // 每行两个图，margin总共有4dp
+        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / 3); // 图片的宽比高为1.5:1，
         return new ViewHolder(view);
     }
 
-    // binds the data to the TextView in each cell
+    // 绑定数据
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-//
-//        holder.wallpaper.setMaxWidth(imgWidth);
-//        holder.wallpaper.setMaxHeight(imgHeight);
         holder.wallpaper.setImageResource(R.drawable.ic_launcher_foreground);
-//        int width = holder.wallpaper.getWidth();
-//        holder.wallpaper.setMinimumHeight(width);
         WallPaperDataItem dataItem = data.get(position);
         byte[] imgBytes = dataItem.getImgBytes();
         if (imgBytes == null) {
             // 下载图片
             Log.i("RepoFragment", "pos: " + position + " download image. Data num:" + data.size() + "---------------");
             String imgSrc = dataItem.getImgSrc();
-            // Uri imgUri = Uri.fromFile( new File(imgSrc)); // 图片链接为本地时用
-            // String imgSrc = "https://sjbz-fd.zol-img.com.cn/t_s320x510c/g5/M00/04/0F/ChMkJlwCgPOIDfFwABOYC3Cio-IAAth8wOz1nYAE5gj262.jpg"; // 暂时代替！
             Glide.with(context)
                     .load(imgSrc)
                     .into(holder.wallpaper);
@@ -77,11 +62,8 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         } else {
             Log.i("RepoFragment", "pos: " + position +" Decode bitmap image.");
             Bitmap bitmap = BitmapFactory.decodeByteArray(imgBytes, 0, imgBytes.length);
-            // bitmap = scaleBitmap(bitmap, imgWidth, imgHeight);
             holder.wallpaper.setImageBitmap(bitmap);
         }
-
-//        int nWidth = holder.wallpaper.getWidth();
     }
 
     public static Bitmap scaleBitmap(Bitmap bitmap, int dst_w, int dst_h) {
@@ -96,7 +78,6 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         return dstbmp;
     }
 
-    // total number of cells
     @Override
     public int getItemCount() {
         return data.size();
@@ -125,12 +106,11 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         }
     }
 
-    // allows clicks events to be caught
     void setClickListener(ItemClickListener itemClickListener) {
         this.mClickListener = itemClickListener;
     }
 
-    // parent activity will implement this method to respond to click events
+    // 父Activity会实现该接口来监听点击事件。
     public interface ItemClickListener {
         void onItemClick(View view, int position);
     }
