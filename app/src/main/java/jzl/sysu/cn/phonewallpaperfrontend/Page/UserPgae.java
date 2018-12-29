@@ -1,11 +1,9 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Page;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,26 +11,29 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import java.util.logging.Logger;
+import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
+import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link UserFragment.OnFragmentInteractionListener} interface
+ * {@link UserPgae.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link UserFragment#newInstance} factory method to
+ * Use the {@link UserPgae#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class UserFragment extends Fragment{
+public class UserPgae extends Fragment{
     private OnFragmentInteractionListener mListener;
 
-    public UserFragment() {
+    public UserPgae() {
         // Required empty public constructor
     }
 
-    public static UserFragment newInstance(String param1, String param2) {
-        UserFragment fragment = new UserFragment();
+    public static UserPgae newInstance(String param1, String param2) {
+        UserPgae fragment = new UserPgae();
         return fragment;
     }
 
@@ -45,7 +46,7 @@ public class UserFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_user, container, false);
+        View view = inflater.inflate(R.layout.page_user, container, false);
 
         return view;
     }

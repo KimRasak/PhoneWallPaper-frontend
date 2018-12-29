@@ -1,12 +1,12 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
-import android.os.UserHandle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
+
+import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.R;
 
 public class UserConfigActivity extends AppCompatActivity {
     Button btn_logout;

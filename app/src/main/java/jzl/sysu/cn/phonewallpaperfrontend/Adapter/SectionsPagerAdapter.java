@@ -1,13 +1,14 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Adapter;
 
 
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import java.util.List;
 
-public class SectionsPagerAdapter extends FragmentPagerAdapter {
+public class SectionsPagerAdapter extends FragmentPagerAdapter{
     List<Fragment> fragments;
 
     public SectionsPagerAdapter(FragmentManager fm, List<Fragment> fragments) {

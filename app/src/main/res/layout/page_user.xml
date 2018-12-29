@@ -14,7 +14,7 @@
             android:id="@+id/user_info_fragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:name="jzl.sysu.cn.phonewallpaperfrontend.LoginFragment"
+            android:name="jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment"
             tools:layout="@layout/fragment_login">
         </fragment>
     </FrameLayout>

@@ -1,4 +1,4 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Page;
 
 import android.content.Context;
 import android.net.Uri;
@@ -8,16 +8,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import jzl.sysu.cn.phonewallpaperfrontend.R;
+
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link RecommendationFragment.OnFragmentInteractionListener} interface
+ * {@link RecommendationPgae.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link RecommendationFragment#newInstance} factory method to
+ * Use the {@link RecommendationPgae#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RecommendationFragment extends Fragment {
+public class RecommendationPgae extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -29,7 +31,7 @@ public class RecommendationFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public RecommendationFragment() {
+    public RecommendationPgae() {
         // Required empty public constructor
     }
 
@@ -39,11 +41,11 @@ public class RecommendationFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment RecommendationFragment.
+     * @return A new instance of fragment RecommendationPgae.
      */
     // TODO: Rename and change types and number of parameters
-    public static RecommendationFragment newInstance(String param1, String param2) {
-        RecommendationFragment fragment = new RecommendationFragment();
+    public static RecommendationPgae newInstance(String param1, String param2) {
+        RecommendationPgae fragment = new RecommendationPgae();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -64,7 +66,7 @@ public class RecommendationFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_recommendation, container, false);
+        return inflater.inflate(R.layout.page_recommendation, container, false);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

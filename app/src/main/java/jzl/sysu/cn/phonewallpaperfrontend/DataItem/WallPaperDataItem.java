@@ -1,4 +1,4 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.DataItem;
 
 public class WallPaperDataItem {
     private String id;
@@ -6,7 +6,7 @@ public class WallPaperDataItem {
     private String imgSrc;
     private byte[] imgBytes;
 
-    WallPaperDataItem(String id, String category, String imgSrc) {
+    public WallPaperDataItem(String id, String category, String imgSrc) {
         this.id = id;
         this.category = category;
         this.imgSrc = imgSrc;

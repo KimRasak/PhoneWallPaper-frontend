@@ -1,10 +1,8 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -14,7 +12,6 @@ import android.widget.Toast;
 
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
 import com.ashokvarma.bottomnavigation.BottomNavigationItem;
-import com.tencent.connect.UserInfo;
 import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
@@ -26,9 +23,18 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
+import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
+import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.Page.RecommendationPgae;
+import jzl.sysu.cn.phonewallpaperfrontend.Page.RepoPgae;
+import jzl.sysu.cn.phonewallpaperfrontend.Page.UserPgae;
+import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Adapter.SectionsPagerAdapter;
+
 public class MainActivity extends AppCompatActivity implements BottomNavigationBar
         .OnTabSelectedListener, ViewPager.OnPageChangeListener,
-        RecommendationFragment.OnFragmentInteractionListener, RepoFragment.OnFragmentInteractionListener, UserFragment.OnFragmentInteractionListener,
+        RecommendationPgae.OnFragmentInteractionListener, UserPgae.OnFragmentInteractionListener,
         LoginFragment.LoginFragmentListener,
         UserInfoFragment.OnFragmentInteractionListener{
     private ViewPager viewPager;
@@ -72,9 +78,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
 
     private void initViewPager() {
         fragments = new ArrayList<Fragment>();
-        fragments.add(new RecommendationFragment());
-        fragments.add(new RepoFragment());
-        fragments.add(new UserFragment());
+        fragments.add(new RecommendationPgae());
+        fragments.add(new RepoPgae());
+        fragments.add(new UserPgae());
 
         viewPager.setOffscreenPageLimit(3);
         viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager(), fragments));

@@ -1,18 +1,13 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Fragment;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
@@ -24,31 +19,37 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
+import jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView;
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
+import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
+import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.DataItem.WallPaperDataItem;
+import jzl.sysu.cn.phonewallpaperfrontend.Adapter.WallPaperRecyclerViewAdapter;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
-    private OnFragmentInteractionListener mListener;
+public class WallPaperListContentFragment extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
     private WallPaperRecyclerViewAdapter adapter;
+    private String category;
+    private String sort;
 
     public static final MediaType FORM_CONTENT_TYPE
             = MediaType.parse("application/json; charset=utf-8");
 
-    public RepoFragment() {
+    public WallPaperListContentFragment() {
         // Required empty public constructor
     }
 
-    public static RepoFragment newInstance(String param1, String param2) {
-        RepoFragment fragment = new RepoFragment();
+    public static WallPaperListContentFragment newInstance(String category, String sort) {
+        WallPaperListContentFragment fragment = new WallPaperListContentFragment();
+        fragment.category = category;
+        fragment.sort = sort;
         return fragment;
     }
 
@@ -60,8 +61,7 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_repo, container, false);
-
+        View view = inflater.inflate(R.layout.fragment_wallpaper_list_content, container, false);
 
         // Find views by ids.
         final SwipeToLoadLayout wallpaper_swipe_layout = view.findViewById(R.id.wallpaper_swipe_layout);
@@ -82,43 +82,29 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         rv_wallpapers.setAdapter(adapter);
 
         // 设置上拉刷新的listener
-        LoadWallpaperListener loadWallpaperListener = new LoadWallpaperListener(wallpaper_swipe_layout, adapter);
+        WallPaperListContentFragment.LoadWallpaperListener loadWallpaperListener = new WallPaperListContentFragment.LoadWallpaperListener(wallpaper_swipe_layout, adapter);
         wallpaper_swipe_layout.setOnLoadMoreListener(loadWallpaperListener);
-        loadWallpaperListener.loadWallPaperIfEmpty();
+
+        // 仅当用newInstance调入该Fragment时，category才会被赋值。xml的<fragment>标签会自动创造一次该fragment。
+        if (category != null && sort != null)
+            loadWallpaperListener.loadWallPaperIfEmpty();
         return view;
     }
 
-    private RequestBody createPageRequestBody(String category, int pageNum, int pageSize) {
+    private RequestBody createPageRequestBody(String category, int pageNum, int pageSize, String sort) {
         JSONObject requestJsonObject = new JSONObject();
         try {
             requestJsonObject.put("category", category);
-            requestJsonObject.put("sort", "rank");
+            requestJsonObject.put("sort", sort);
             requestJsonObject.put("pageNum", String.valueOf(pageNum));
             requestJsonObject.put("pageSize", String.valueOf(pageSize));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.i("RepoFragment", requestJsonObject.toString());
+        Log.i("RepoPgae", requestJsonObject.toString());
         // application/json
         RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
         return requestBody;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     @Override
@@ -132,10 +118,8 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         void onFragmentInteraction(Uri uri);
     }
 
-    public class LoadWallpaperListener implements OnLoadMoreListener{
-        private static final String HOME_PC_IP = "192.168.31.246";
-        private static final String SCHOOL_PC_IP = "192.168.199.181";
-        private static final String WALLPAPER_LIST_URL = "http://" + SCHOOL_PC_IP +":9090/wallpaper/list";
+    public class LoadWallpaperListener implements OnLoadMoreListener {
+        private static final String WALLPAPER_LIST_URL = "http://" + Constants.SCHOOL_PC_IP +":9090/wallpaper/list";
         static final int PAGE_SIZE = 20;
         private SwipeToLoadLayout wallpaper_swipe_layout;
         private WallPaperRecyclerViewAdapter rv_adapter; // recyclerView的adapter。
@@ -145,6 +129,7 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
             this.rv_adapter = adapter;
         }
 
+        // 触发上拉加载事件时，调用该方法。
         @Override
         public void onLoadMore() {
             loadWallPaper();
@@ -160,21 +145,22 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
         }
 
         public void loadWallPaper() {
-            String category = "美女";
+            String category = WallPaperListContentFragment.this.category;
             int itemCount = adapter.getItemCount();
             int pageSize = PAGE_SIZE;
             int pageNum = itemCount / PAGE_SIZE;
+            String sort = WallPaperListContentFragment.this.sort;
             String url = WALLPAPER_LIST_URL; // 手机应当连接本地wifi，并访问pc的本地ip
 
             OkHttpClient okHttpClient = new OkHttpClient();
-            RequestBody requestBody = createPageRequestBody(category, pageNum, pageSize);
+            RequestBody requestBody = createPageRequestBody(category, pageNum, pageSize, sort);
             Request request = new Request.Builder().url(url).post(requestBody).build();
 
             // 接收壁纸信息的回调函数。
             okHttpClient.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Log.e("RepoFragment", e.getMessage());
+                    Log.e("RepoPgae", e.getMessage());
                     e.printStackTrace();
                     wallpaper_swipe_layout.setLoadingMore(false);
 
@@ -192,16 +178,17 @@ public class RepoFragment extends Fragment implements WallPaperRecyclerViewAdapt
                             String id = itemJsonObject.getString("id");
                             String category = itemJsonObject.getString("category");
                             String imgSrc = itemJsonObject.getString("path");
+
                             WallPaperDataItem dataItem = new WallPaperDataItem(id, category, imgSrc);
                             adapter.addDataItem(dataItem);
                         }
 
-                        Log.i("RepoFragment", "新收到的壁纸数: " + wallPaperJsonArray.length());
-                        Log.i("RepoFragment", "内容: " + responseString);
+                        Log.i("RepoPgae", "新收到的壁纸数: "   + wallPaperJsonArray.length());
+                        Log.i("RepoPgae", "内容: " + responseString);
                         wallpaper_swipe_layout.post(new Runnable() {
                             @Override
                             public void run() {
-                                Log.i("RepoFragment", "触发notifyDataSetChanged. Adpater内的壁纸数: " + adapter.getItemCount());
+                                Log.i("RepoPgae", "触发notifyDataSetChanged. Adpater内的壁纸数: " + adapter.getItemCount());
                                 adapter.notifyDataSetChanged();
                                 wallpaper_swipe_layout.setLoadingMore(false);
                             }

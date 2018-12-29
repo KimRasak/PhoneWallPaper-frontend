@@ -10,7 +10,7 @@ import com.tencent.tauth.Tencent;
 
 import org.json.JSONObject;
 
-class LoginHelper {
+public class LoginHelper {
     private static final LoginHelper instance = new LoginHelper();
 
     private final String SCOPE_QQ = "get_simple_userinfo";
@@ -22,7 +22,7 @@ class LoginHelper {
 
 
 
-    static LoginHelper getInstance(Context applicationContext) {
+    public static LoginHelper getInstance(Context applicationContext) {
         context  = applicationContext;
         APP_ID = context.getString(R.string.APP_ID);
         tencent = Tencent.createInstance(APP_ID, context);
