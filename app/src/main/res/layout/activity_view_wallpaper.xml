@@ -9,7 +9,7 @@
     <ImageView
         android:id="@+id/wallpaper"
         android:layout_width="wrap_content"
-        android:layout_height="400dp"
+        android:layout_height="300dp"
         android:scaleType="fitXY"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -17,24 +17,29 @@
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
     <!--热门评论-->
-    <ListView
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/hotComments"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/wallpaper"
+        tools:listitem="@layout/item_comment"
+        tools:itemCount="1">
 
-    </ListView>
+    </android.support.v7.widget.RecyclerView>
 
     <!--所有评论-->
     <com.aspsine.swipetoloadlayout.SwipeToLoadLayout
         android:id="@+id/commentsSwipeLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ListView
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/hotComments">
+        <android.support.v7.widget.RecyclerView
             android:id="@+id/swipe_target"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            tools:listitem="@layout/item_comment">
 
-        </ListView>
+        </android.support.v7.widget.RecyclerView>
 
         <jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView
             android:id="@id/swipe_load_more_footer"

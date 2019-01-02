@@ -34,7 +34,7 @@ import okhttp3.Response;
 public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.ItemClickListener{
     private GridLayoutRecyclerView rvCategory;
     private CategoryRecyclerViewAdapter rvAdapter;
-    private String CATEGORY_LIST_URL = "http://" + Constants.SCHOOL_PC_IP +":9090/wallpaper/category";
+    private String CATEGORY_LIST_URL = "http://" + Constants.PC_IP +":9090/wallpaper/category";
     public RepoPgae() {
         // Required empty public constructor
     }

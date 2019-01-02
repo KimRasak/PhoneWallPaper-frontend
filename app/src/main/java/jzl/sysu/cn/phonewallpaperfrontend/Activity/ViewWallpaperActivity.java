@@ -1,10 +1,14 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 
@@ -34,16 +38,16 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ViewWallpaperActivity extends AppCompatActivity {
+public class ViewWallpaperActivity extends AppCompatActivity implements  CommentsAdapter.ItemClickListener {
     // 壁纸
     ImageView wallpaper;
     String wallpaperId;
     String wallpaperSrc;
 
     // 热门评论、评论区
-    ListView hotComments;
+    RecyclerView hotComments;
     SwipeToLoadLayout commentsLayout;
-    ListView comments;
+    RecyclerView comments;
     LoadMoreFooterView swipe_load_more_footer;
 
 
@@ -64,7 +68,7 @@ public class ViewWallpaperActivity extends AppCompatActivity {
         // 获取壁纸
         Intent intent = getIntent();
         wallpaperId = intent.getStringExtra("wallpaperId");
-        wallpaperSrc = intent.getStringExtra("wallpaper");
+        wallpaperSrc = intent.getStringExtra("wallpaperSrc");
         if (wallpaperSrc == null)
             return;
         Glide.with(this).load(wallpaperSrc).into(wallpaper);
@@ -77,17 +81,39 @@ public class ViewWallpaperActivity extends AppCompatActivity {
         ArrayList<CommentDataItem> commentsData = new ArrayList<>();
         CommentsAdapter hotCommentsAdapter = new CommentsAdapter(this, hotCommentsData);
         CommentsAdapter commentsAdapter = new CommentsAdapter(this, commentsData);
+        hotComments.setAdapter(hotCommentsAdapter);
         comments.setAdapter(commentsAdapter);
 
+        // 设置RecyclerView的LayoutManager。
+        hotComments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        comments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+
+        // 设置RecyclerView点击回复
+        hotCommentsAdapter.setClickListener(this);
+        commentsAdapter.setClickListener(this);
 
         // 无热门评论时，隐藏hotComments。
         if (commentsData.size() == 0)
             hotComments.setVisibility(View.GONE);
 
+        LoadCommentsListener loadCommentsListener = new LoadCommentsListener(commentsLayout, commentsAdapter);
+        commentsLayout.setOnLoadMoreListener(loadCommentsListener);
+
+    }
+
+    @Override
+    public void onItemClick(View view, int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ViewWallpaperActivity.this);
+        builder.setTitle("请输入");
+        builder.setView(new EditText(ViewWallpaperActivity.this));
+        builder.setPositiveButton("是" ,  null );
+        builder.setNegativeButton("否", null);
+        builder.show();
     }
 
     public class LoadCommentsListener implements OnLoadMoreListener {
-        private static final String COMMENTS_LIST_URL = "http://" + Constants.SCHOOL_PC_IP +":9090/comments";
+        private static final String COMMENTS_LIST_URL = "http://" + Constants.PC_IP +":9090/comments";
         static final int PAGE_SIZE = 20;
         private SwipeToLoadLayout commentsLayout;
         private CommentsAdapter adapter; // recyclerView的adapter。
@@ -100,7 +126,7 @@ public class ViewWallpaperActivity extends AppCompatActivity {
         // 触发上拉加载事件时，调用该方法。
         @Override
         public void onLoadMore() {
-
+            loadWallPaper();
         }
 
         public void loadWallPaperIfEmpty() {
@@ -109,14 +135,14 @@ public class ViewWallpaperActivity extends AppCompatActivity {
         }
 
         public boolean isEmpty() {
-            return adapter.getCount() == 0;
+            return adapter.getItemCount() == 0;
         }
 
 
         public void loadWallPaper() {
             String wallpaperId = ViewWallpaperActivity.this.wallpaperId;
             String wallpaperSrc = ViewWallpaperActivity.this.wallpaperSrc;
-            int itemCount = adapter.getCount();
+            int itemCount = adapter.getItemCount();
             int pageSize = PAGE_SIZE;
             int pageNum = itemCount / PAGE_SIZE;
             String url = COMMENTS_LIST_URL; // 手机应当连接本地wifi，并访问pc的本地ip

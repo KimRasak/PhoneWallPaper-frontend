@@ -1,5 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Fragment;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,6 +21,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Activity.ViewWallpaperActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
@@ -112,6 +114,15 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         Log.i("fragment", "点击了第 " + position + "项（0开头）");
         boolean image_loaded = adapter.getItem(position).getImgBytes() != null;
         Toast.makeText(view.getContext(), "加载第" + position + "张图片.图片尺寸：" + view.getWidth() + " " + view.getHeight(), Toast.LENGTH_SHORT).show();
+
+
+        WallPaperDataItem dataItem = adapter.getItem(position);
+        String wallpaperId = dataItem.getId();
+        String wallpaperSrc = dataItem.getImgSrc();
+        Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
+        intent.putExtra("wallpaperId", wallpaperId);
+        intent.putExtra("wallpaperSrc", wallpaperSrc);
+        startActivity(intent);
     }
 
     public interface OnFragmentInteractionListener {
@@ -119,7 +130,7 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
     }
 
     public class LoadWallpaperListener implements OnLoadMoreListener {
-        private static final String WALLPAPER_LIST_URL = "http://" + Constants.SCHOOL_PC_IP +":9090/wallpaper/list";
+        private static final String WALLPAPER_LIST_URL = "http://" + Constants.PC_IP +":9090/wallpaper/list";
         static final int PAGE_SIZE = 20;
         private SwipeToLoadLayout wallpaper_swipe_layout;
         private WallPaperRecyclerViewAdapter rv_adapter; // recyclerView的adapter。

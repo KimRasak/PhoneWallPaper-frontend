@@ -32,13 +32,13 @@
         android:id="@+id/comment_content"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
+        android:gravity="left"
         android:inputType="textMultiLine"
         android:maxLines="10"
-        android:gravity="left"
-        android:text="N得到amddddddddddddddddd"
+        android:text="这个壁纸不错"
         app:layout_constraintLeft_toRightOf="@id/user_icon"
-        app:layout_constraintTop_toBottomOf="@id/user_name" />
+        app:layout_constraintTop_toBottomOf="@id/user_name"
+        tools:text="这个壁纸不错" />
 </android.support.constraint.ConstraintLayout>

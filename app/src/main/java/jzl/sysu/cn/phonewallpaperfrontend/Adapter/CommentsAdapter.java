@@ -1,10 +1,11 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Adapter;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,67 +18,79 @@ import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CommentDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import me.codeboy.android.aligntextview.CBAlignTextView;
 
-public class CommentsAdapter extends BaseAdapter {
+public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHolder> {
     private LayoutInflater inflater;
+    private Context context;
     private List<CommentDataItem> data;
+    private CommentsAdapter.ItemClickListener mClickListener;
 
     //MyAdapter需要一个Context，通过Context获得Layout.inflater，然后通过inflater加载item的布局
     public CommentsAdapter(Context context, List<CommentDataItem> data) {
-        inflater = LayoutInflater.from(context);
-        data = data;
+        this.context = context;
+        this.inflater = LayoutInflater.from(context);
+        this.data = data;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = inflater.inflate(R.layout.item_comment, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public int getCount() {
-        return data.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return data.get(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return 0;
-    }
-
-    public void addDataItem(CommentDataItem dataItem) { data.add(dataItem); }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder = null;
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.item_comment, parent, false); //加载布局
-            holder = new ViewHolder();
-            holder.user_icon = (ImageView) convertView.findViewById(R.id.user_icon);
-            holder.user_name = (TextView) convertView.findViewById(R.id.user_name);
-            holder.content = (CBAlignTextView) convertView.findViewById(R.id.comment_content);
-            convertView.setTag(holder);
-        } else {   //else里面说明，convertView已经被复用了，说明convertView中已经设置过tag了，即holder
-            holder = (ViewHolder) convertView.getTag();
-        }
-
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        // 获取数据。
         CommentDataItem comment = data.get(position);
+
+        // 绑定评论信息。
         holder.user_name.setText(comment.getUserName());
         holder.content.setText(comment.getContent());
 
         // 加载人物头像。
-        if (comment.getUserIconBytes() == null) {
-            Context context = convertView.getContext();
-            Glide.get(context).setMemoryCategory(MemoryCategory.HIGH);
-            Glide.with(context)
-                    .load(comment.getUserIcon())
-                    .into(holder.user_icon);
-        } else {
-            //
-        }
-        return convertView;
+        Glide.get(context).setMemoryCategory(MemoryCategory.HIGH);
+        Glide.with(context)
+                .load(comment.getUserIcon())
+                .into(holder.user_icon);
     }
 
-    private class ViewHolder {
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemCount() {
+        return data.size();
+    }
+
+    public void addDataItem(CommentDataItem dataItem) { data.add(dataItem); }
+
+
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener  {
         ImageView user_icon;
         TextView user_name;
         CBAlignTextView content;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            user_icon = itemView.findViewById(R.id.user_icon);
+            user_name = itemView.findViewById(R.id.user_name);
+            content = itemView.findViewById(R.id.comment_content);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+        }
+    }
+
+    public void setClickListener(CommentsAdapter.ItemClickListener itemClickListener) {
+        this.mClickListener = itemClickListener;
+    }
+
+    // 父Activity会实现该接口来监听点击事件。
+    public interface ItemClickListener {
+        void onItemClick(View view, int position);
     }
 }
