@@ -61,7 +61,12 @@ public class UserPgae extends Fragment{
         // 登陆QQ
         Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
 
-        if (helper.isLoggedIn(getActivity())) {
+        changeUserFragment(helper.isLoggedIn(getActivity()));
+        super.onResume();
+    }
+
+    public void changeUserFragment(boolean isLoggedIn) {
+        if (isLoggedIn) {
             Fragment fragment = new UserInfoFragment();
             FragmentManager fm = getFragmentManager();
             fm.beginTransaction()
@@ -75,8 +80,6 @@ public class UserPgae extends Fragment{
                     .replace(R.id.user_info_container, fragment)
                     .commit();
         }
-
-        super.onResume();
     }
 
     @Override

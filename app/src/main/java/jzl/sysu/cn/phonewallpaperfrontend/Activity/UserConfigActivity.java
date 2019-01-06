@@ -22,7 +22,8 @@ public class UserConfigActivity extends AppCompatActivity {
         btn_logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                LoginHelper.getInstance(getApplicationContext()).logOutQQ(UserConfigActivity.this);
+                LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
+                helper.logOut(UserConfigActivity.this);
                 setResult(0);
                 finish();
             }
