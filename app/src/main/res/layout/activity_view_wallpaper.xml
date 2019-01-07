@@ -37,7 +37,9 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:src="@drawable/ic_outline_favorite_border_24px" />
+
             <TextView
+                android:id="@+id/likeNum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"

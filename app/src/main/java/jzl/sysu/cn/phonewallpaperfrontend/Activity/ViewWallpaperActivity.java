@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
@@ -59,6 +60,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     // 中间栏
     LinearLayout likeLayout;
     ImageView likeImage;
+    int likeNum;
+    TextView tvLikeNum;
     LinearLayout collectLayout;
     ImageView collectImage;
     LinearLayout downloadLayout;
@@ -94,6 +97,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         Intent intent = getIntent();
         wallpaperId = intent.getStringExtra("wallpaperId");
         wallpaperSrc = intent.getStringExtra("wallpaperSrc");
+        likeNum = intent.getIntExtra("likeNum", 0);
+
         if (wallpaperSrc == null)
             return;
 
@@ -101,8 +106,9 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         Glide.with(this).load(wallpaperSrc).into(wallpaper);
 
         // 中间栏
-        // 设置图片激活状态。
+        // 设置点赞、收藏图片的激活状态。
         checkRelationshipState();
+        setLikeNum(likeNum);
         // “点赞”按钮
         likeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,6 +181,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     public void findView() {
         // 中间栏
         likeLayout = findViewById(R.id.likeLayout);
+        tvLikeNum = findViewById(R.id.likeNum);
         collectLayout = findViewById(R.id.collectLayout);
         downloadLayout = findViewById(R.id.downloadLayout);
         likeImage = findViewById(R.id.likeImage);
@@ -270,22 +277,37 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         }
     }
 
+    public void likeWallpaperFail(boolean isLike) {
+        Looper.prepare();
+        setLikeImage(!isLike);
+        setLikeNum(!isLike);
+        Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
+        Looper.loop();
+    }
+
     public void likeWallpaper(final boolean isLike) {
         // 点击"点赞"按钮后执行。
 
+        // 未登陆不可点赞。
+        if (!LoginHelper.getInstance(ViewWallpaperActivity.this).isLoggedIn()) {
+            Toast.makeText(ViewWallpaperActivity.this, "请先登陆", Toast.LENGTH_SHORT).show();
+        }
+
+        // 先假装点赞成功。
+        setLikeNum(isLike);
+
+        // 建立向服务器发送的Request
         String url = LIKE_WALLPAPER_URL;
         RequestBody requestBody = createLikeRequestBody(wallpaperId, isLike);
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder().url(url).post(requestBody).build();
 
+
         // 接收壁纸信息的回调函数。
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Looper.prepare();
-                setLikeImage(!isLike);
-                Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
-                Looper.loop();
+                likeWallpaperFail(isLike);
             }
 
             @Override
@@ -303,10 +325,9 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                             Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞成功", Toast.LENGTH_SHORT).show();
                             Looper.loop();
                         } else {
+                            // 服务器返回失败条文，点赞失败。
                             Log.i("LikeWallpaper", msg);
-                            Looper.prepare();
-                            Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
-                            Looper.loop();
+                            likeWallpaperFail(isLike);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -342,7 +363,28 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         return requestBody;
     }
 
+    public void changeLikeNumText(int delta) {
+        int num = getLikeNum();
+        setLikeNum(num + delta);
+    }
+
+    public int getLikeNum() {
+        return Integer.valueOf(tvLikeNum.getText().toString());
+    }
+
+    public void setLikeNum(boolean isLike) {
+        int delta = isLike ? 1 : -1;
+        likeNum = likeNum + delta;
+        setLikeNum(likeNum);
+    }
+
+    public void setLikeNum(int num) {
+        likeNum = num;
+        tvLikeNum.setText(String.valueOf(num));
+    }
+
     public void setMiddleLayoutState(Boolean isLike, Boolean isCollect) {
+        // 仅当查询用户与壁纸的点赞、收藏关系时调用。
         collectImage.setTag(isCollect);
         setLikeImage(isLike);
         setCollectImage(isCollect);

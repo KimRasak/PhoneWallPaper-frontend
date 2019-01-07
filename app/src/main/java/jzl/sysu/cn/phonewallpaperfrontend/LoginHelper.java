@@ -42,6 +42,10 @@ public class LoginHelper {
 
     }
 
+    public boolean isLoggedIn() {
+        return userId != null;
+    }
+
     public void logOut(Context activity) {
         if (getQQLogStatusLocally(activity)) {
             logOutQQ(activity);

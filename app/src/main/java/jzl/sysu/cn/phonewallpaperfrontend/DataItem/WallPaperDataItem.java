@@ -4,12 +4,14 @@ public class WallPaperDataItem {
     private String id;
     private String category;
     private String imgSrc;
+    private int likeNum;
     private byte[] imgBytes;
 
-    public WallPaperDataItem(String id, String category, String imgSrc) {
+    public WallPaperDataItem(String id, String category, String imgSrc, int likeNum) {
         this.id = id;
         this.category = category;
         this.imgSrc = imgSrc;
+        this.likeNum = likeNum;
     }
 
     public String getId() {
@@ -28,6 +30,13 @@ public class WallPaperDataItem {
         return imgBytes;
     }
 
+    public int getLikeNum() {
+        return likeNum;
+    }
+
+    public void setLikeNum(int likeNum) {
+        this.likeNum = likeNum;
+    }
     public void setId(String id) {
         this.id = id;
     }

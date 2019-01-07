@@ -31,6 +31,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+// 分类初始界面，可以在其中选择壁纸的分类。
 public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.ItemClickListener{
     private GridLayoutRecyclerView rvCategory;
     private CategoryRecyclerViewAdapter rvAdapter;

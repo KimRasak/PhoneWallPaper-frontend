@@ -111,17 +111,22 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
 
     @Override
     public void onItemClick(View view, int position) {
+        // 点击某张图片后执行。
         Log.i("fragment", "点击了第 " + position + "项（0开头）");
         boolean image_loaded = adapter.getItem(position).getImgBytes() != null;
         Toast.makeText(view.getContext(), "加载第" + position + "张图片.图片尺寸：" + view.getWidth() + " " + view.getHeight(), Toast.LENGTH_SHORT).show();
 
-
+        // 获取WallPaperDataItem
         WallPaperDataItem dataItem = adapter.getItem(position);
         String wallpaperId = dataItem.getId();
         String wallpaperSrc = dataItem.getImgSrc();
+        int likeNum = dataItem.getLikeNum();
+
+        // 创建Intent
         Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
         intent.putExtra("wallpaperId", wallpaperId);
         intent.putExtra("wallpaperSrc", wallpaperSrc);
+        intent.putExtra("likeNum", likeNum);
         startActivity(intent);
     }
 
@@ -189,8 +194,9 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
                             String id = itemJsonObject.getString("id");
                             String category = itemJsonObject.getString("category");
                             String imgSrc = itemJsonObject.getString("path");
+                            int likeNum = itemJsonObject.getInt("likeNum");
 
-                            WallPaperDataItem dataItem = new WallPaperDataItem(id, category, imgSrc);
+                            WallPaperDataItem dataItem = new WallPaperDataItem(id, category, imgSrc, likeNum);
                             adapter.addDataItem(dataItem);
                         }
 
