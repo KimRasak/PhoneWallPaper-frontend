@@ -1,9 +1,15 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,7 +26,16 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
@@ -39,6 +54,7 @@ public class UserConfigActivity extends AppCompatActivity {
     // 头像
     ImageView userIcon;
     TextView tvChangeUserIcon;
+    String photoUri;
 
     // 用户名
     EditText etUserName;
@@ -145,7 +161,7 @@ public class UserConfigActivity extends AppCompatActivity {
         bt_camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // takeCamera(Constants.REQUEST_CAMERA_IMAGE);
+                takeCamera(Constants.REQUEST_CAMERA_IMAGE);
                 popupWindow.dismiss();
 
             }
@@ -174,6 +190,46 @@ public class UserConfigActivity extends AppCompatActivity {
 
     }
 
+    private void takeCamera(int num) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(this.getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            photoFile = createImageFile();
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+            }
+        }
+
+        startActivityForResult(takePictureIntent, num);//跳转界面传回拍照所得数据
+    }
+
+    private File createImageFile() {
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File image = null;
+        try {
+            image = File.createTempFile(
+                    generateFileName(),  /* prefix */
+                    ".jpg",         /* suffix */
+                    storageDir      /* directory */
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        photoUri = image.getAbsolutePath();
+        return image;
+    }
+
+    public static String generateFileName() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        return imageFileName;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == Constants.REQUEST_LOAD_IMAGE)
@@ -181,6 +237,38 @@ public class UserConfigActivity extends AppCompatActivity {
         else if (requestCode == Constants.REQUEST_CAMERA_IMAGE)
             loadCameraImage(data);
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    public static byte[] File2byte(String filePath) {
+        byte[] buffer = null;
+        try {
+            File file = new File(filePath);
+            FileInputStream fis = new FileInputStream(file);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] b = new byte[1024];
+            int n;
+            while ((n = fis.read(b)) != -1) {
+                bos.write(b, 0, n);
+            }
+            fis.close();
+            bos.close();
+            buffer = bos.toByteArray();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return buffer;
+    }
+
+    private void loadCameraImage(Intent data) {
+        byte[] imageBytes = File2byte(photoUri);
+
+    }
+
+    private void loadAlbumImage() {
+
     }
 
     /* 修改个人昵称 */

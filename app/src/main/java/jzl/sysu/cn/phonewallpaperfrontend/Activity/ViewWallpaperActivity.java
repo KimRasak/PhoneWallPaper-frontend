@@ -291,6 +291,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // 未登陆不可点赞。
         if (!LoginHelper.getInstance(ViewWallpaperActivity.this).isLoggedIn(this)) {
             Toast.makeText(ViewWallpaperActivity.this, "请先登陆", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         // 先假装点赞成功。
