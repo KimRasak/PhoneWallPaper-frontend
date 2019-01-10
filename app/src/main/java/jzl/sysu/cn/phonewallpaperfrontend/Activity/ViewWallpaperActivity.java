@@ -289,7 +289,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // 点击"点赞"按钮后执行。
 
         // 未登陆不可点赞。
-        if (!LoginHelper.getInstance(ViewWallpaperActivity.this).isLoggedIn()) {
+        if (!LoginHelper.getInstance(ViewWallpaperActivity.this).isLoggedIn(this)) {
             Toast.makeText(ViewWallpaperActivity.this, "请先登陆", Toast.LENGTH_SHORT).show();
         }
 
@@ -342,24 +342,26 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     }
 
     public RequestBody createLikeRequestBody(String wallpaperId, boolean isLike) {
-        JSONObject requestJsonObject = new JSONObject();
+        JSONObject requestData = new JSONObject();
         try {
             // 获取授权信息
             LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
             String openId = helper.getOpenId();
             String accessToken = helper.getAccessToken();
+            String auth = helper.getAuth();
 
-            requestJsonObject.put("openId", openId);
-            requestJsonObject.put("accessToken", accessToken);
-            requestJsonObject.put("wallpaperId", wallpaperId);
-            requestJsonObject.put("like", isLike);
+            requestData.put("openId", openId);
+            requestData.put("accessToken", accessToken);
+            requestData.put("auth", auth);
+            requestData.put("wallpaperId", wallpaperId);
+            requestData.put("like", isLike);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        Log.i("likeWallpaper", requestJsonObject.toString());
+        Log.i("likeWallpaper", requestData.toString());
         // 设置RequestBody。格式为application/json
-        RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
+        RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestData.toString());
         return requestBody;
     }
 
@@ -472,9 +474,11 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                 LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
                 String openid = helper.getOpenId();
                 String accessToken = helper.getAccessToken();
+                String auth = helper.getAuth();
 
                 requestJsonObject.put("openId", openid);
                 requestJsonObject.put("accessToken", accessToken);
+                requestJsonObject.put("auth", auth);
                 requestJsonObject.put("wallPaperId", wallpaperId);
                 requestJsonObject.put("toCommentId", toCommentId);
                 requestJsonObject.put("content", content);

@@ -70,7 +70,7 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (mListener != null) {
-                    mListener.doLogin(Constants.AUTH_QQ);
+                    mListener.doLogin(LoginHelper.AUTH_QQ);
                 }
             }
         });

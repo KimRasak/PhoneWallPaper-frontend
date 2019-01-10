@@ -29,9 +29,9 @@
         android:layout_marginTop="16dp"
         android:ellipsize="end"
         android:maxEms="16"
-        android:text="worstprogrammer"
+        android:text="@string/default_user_name"
         android:textColor="@color/userNameBlack"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/user_icon"
         app:layout_constraintTop_toTopOf="@+id/user_icon" />

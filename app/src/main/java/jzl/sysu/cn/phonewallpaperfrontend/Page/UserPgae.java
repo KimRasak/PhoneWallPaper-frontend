@@ -46,9 +46,8 @@ public class UserPgae extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.page_user, container, false);
 
-        return view;
+        return inflater.inflate(R.layout.page_user, container, false);
     }
 
     @Override
@@ -67,7 +66,8 @@ public class UserPgae extends Fragment{
 
     public void changeUserFragment(boolean isLoggedIn) {
         if (isLoggedIn) {
-            Fragment fragment = new UserInfoFragment();
+            LoginHelper helper = LoginHelper.getInstance(getActivity());
+            Fragment fragment = UserInfoFragment.newInstance(helper.getUserIcon(), helper.getUserName(), helper.getSignature());
             FragmentManager fm = getFragmentManager();
             fm.beginTransaction()
                     .replace(R.id.user_info_container, fragment)
