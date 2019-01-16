@@ -2,9 +2,7 @@ package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
@@ -20,7 +18,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,14 +32,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import jzl.sysu.cn.phonewallpaperfrontend.Adapter.WallPaperRecyclerViewAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CommentDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.CommentsAdapter;
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.WallPaperDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Util;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -228,10 +224,18 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
     public void putCommentToServer(String toCommentId, final String content) {
         OkHttpClient okHttpClient = new OkHttpClient();
-        String url = ADD_COMMENT_URL;
         Log.i("ViewWallpaper", wallpaperId);
-        RequestBody requestBody = createAddCommentRequestBody(wallpaperId, toCommentId, content);
-        Request request = new Request.Builder().url(url).post(requestBody).build();
+
+        JSONObject data = new JSONObject();
+        try {
+            data.put("wallpaperId", wallpaperId);
+            data.put("toCommentId", toCommentId);
+            data.put("content", content);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        RequestBody requestBody = Util.buildAuthRequestBody(data, getApplicationContext());
+        Request request = new Request.Builder().url(ADD_COMMENT_URL).post(requestBody).build();
 
         // 接收壁纸信息的回调函数。
         okHttpClient.newCall(request).enqueue(new Callback() {
@@ -299,7 +303,15 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
         // 建立向服务器发送的Request
         String url = LIKE_WALLPAPER_URL;
-        RequestBody requestBody = createLikeRequestBody(wallpaperId, isLike);
+        JSONObject data = new JSONObject();
+        try {
+            data.put("wallpaperId", wallpaperId);
+            data.put("isLike", isLike);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody requestBody = Util.buildRequestBody(data);
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder().url(url).post(requestBody).build();
 
@@ -342,30 +354,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         });
     }
 
-    public RequestBody createLikeRequestBody(String wallpaperId, boolean isLike) {
-        JSONObject requestData = new JSONObject();
-        try {
-            // 获取授权信息
-            LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-            String openId = helper.getOpenId();
-            String accessToken = helper.getAccessToken();
-            String auth = helper.getAuth();
-
-            requestData.put("openId", openId);
-            requestData.put("accessToken", accessToken);
-            requestData.put("auth", auth);
-            requestData.put("wallpaperId", wallpaperId);
-            requestData.put("like", isLike);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        Log.i("likeWallpaper", requestData.toString());
-        // 设置RequestBody。格式为application/json
-        RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestData.toString());
-        return requestBody;
-    }
-
     public void changeLikeNumText(int delta) {
         int num = getLikeNum();
         setLikeNum(num + delta);
@@ -395,14 +383,14 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
     public void checkRelationshipState() {
         String url = GET_RELATIONSHIP_URL;
-        RequestBody requestBody = createGetRelationshipBody(wallpaperId);
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        if (requestBody == null) {
-            setMiddleLayoutState(false, false);
-            Log.i("checkRelationshipState", "用户未登陆");
-            return;
+        JSONObject data = new JSONObject();
+        try {
+            data.put("wallpaperId", wallpaperId);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        RequestBody requestBody = Util.buildRequestBody(data);
+        OkHttpClient okHttpClient = new OkHttpClient();
 
         Request request = new Request.Builder().url(url).post(requestBody).build();
 
@@ -413,7 +401,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
             public void onFailure(Call call, IOException e) {
                 setMiddleLayoutState(false, false);
                 Log.i("checkRelationshipState", "与服务器连接失败");
-                return;
             }
 
             @Override
@@ -436,32 +423,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                 }
             }
         });
-    }
-
-    public RequestBody createGetRelationshipBody(String wallpaperId) {
-        // 获取点赞和收藏情况。
-
-        // 获取授权信息
-        LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-        Long userId = helper.getUserId();
-
-        if (userId == null) {
-            return null;
-        }
-
-        JSONObject requestJsonObject = new JSONObject();
-        try {
-            requestJsonObject.put("userId", userId);
-            requestJsonObject.put("wallpaperId", wallpaperId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        // 测试输出
-        Log.i("ViewActivity", requestJsonObject.toString());
-
-        // 设置RequestBody。格式为application/json
-        RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-        return requestBody;
     }
 
     public RequestBody createAddCommentRequestBody(String wallpaperId, String toCommentId, String content) {
@@ -491,8 +452,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
             Log.i("ViewActivity", requestJsonObject.toString());
 
             // 设置RequestBody。格式为application/json
-            RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-            return requestBody;
+            return RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
         } else {
             // 是对评论的回复。
             // 设置JSONObject

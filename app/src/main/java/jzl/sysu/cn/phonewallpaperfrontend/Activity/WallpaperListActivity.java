@@ -44,8 +44,6 @@ public class WallpaperListActivity extends AppCompatActivity {
         for(int i = 0; i < titles.length; i++){
             tabLayout.getTabAt(i).setText(titles[i]);
         }
-
-        // ReplaceRepoContent(WallPaperListContentFragment.newInstance(category));
     }
 
     @Override
@@ -53,10 +51,4 @@ public class WallpaperListActivity extends AppCompatActivity {
         super.onStart();
     }
 
-    private void ReplaceRepoContent(Fragment fragment) {
-//        FragmentManager fm = getSupportFragmentManager();
-//        fm.beginTransaction()
-//                .replace(R.id.repo_content_container, fragment)
-//                .commit();
-    }
 }
