@@ -55,7 +55,6 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         // 获取数据
         WallPaperDataItem dataItem = data.get(position);
-
         // 设置默认图片
         holder.wallpaper.setImageResource(R.drawable.ic_launcher_foreground);
 

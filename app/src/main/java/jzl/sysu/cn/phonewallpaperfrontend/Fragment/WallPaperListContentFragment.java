@@ -38,12 +38,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class WallPaperListContentFragment extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
+    SwipeToLoadLayout wallpaper_swipe_layout;
     private WallPaperRecyclerViewAdapter adapter;
     private String category;
     private String sort;
 
-    public static final MediaType FORM_CONTENT_TYPE
-            = MediaType.parse("application/json; charset=utf-8");
     private static final String CLICK_URL = "http://" + Constants.PC_IP +":9090/wallpaper/click";
 
     public WallPaperListContentFragment() {
@@ -68,7 +67,7 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         View view = inflater.inflate(R.layout.fragment_wallpaper_list_content, container, false);
 
         // Find views by ids.
-        final SwipeToLoadLayout wallpaper_swipe_layout = view.findViewById(R.id.wallpaper_swipe_layout);
+        wallpaper_swipe_layout = view.findViewById(R.id.wallpaper_swipe_layout);
         LoadMoreFooterView swipe_load_more_footer = view.findViewById(R.id.swipe_load_more_footer);
         AutofitRecyclerView rv_wallpapers = view.findViewById(R.id.swipe_target);
 
@@ -86,7 +85,7 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         rv_wallpapers.setAdapter(adapter);
 
         // 设置上拉刷新的listener
-        WallPaperListContentFragment.LoadWallpaperListener loadWallpaperListener = new WallPaperListContentFragment.LoadWallpaperListener(wallpaper_swipe_layout, adapter);
+        WallPaperListContentFragment.LoadWallpaperListener loadWallpaperListener = new WallPaperListContentFragment.LoadWallpaperListener();
         wallpaper_swipe_layout.setOnLoadMoreListener(loadWallpaperListener);
 
         // 仅当用newInstance调入该Fragment时，category才会被赋值。xml的<fragment>标签会自动创造一次该fragment。
@@ -96,19 +95,18 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
     }
 
     private RequestBody createPageRequestBody(String category, int pageNum, int pageSize, String sort) {
-        JSONObject requestJsonObject = new JSONObject();
+        JSONObject data = new JSONObject();
         try {
-            requestJsonObject.put("category", category);
-            requestJsonObject.put("sort", sort);
-            requestJsonObject.put("pageNum", String.valueOf(pageNum));
-            requestJsonObject.put("pageSize", String.valueOf(pageSize));
+            data.put("category", category);
+            data.put("sort", sort);
+            data.put("pageNum", String.valueOf(pageNum));
+            data.put("pageSize", String.valueOf(pageSize));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.i("RepoPgae", requestJsonObject.toString());
+        Log.i("RepoPgae", data.toString());
         // application/json
-        RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-        return requestBody;
+        return Util.buildRequestBody(data);
     }
 
     private RequestBody createClickRequestBody(String wallpaperId) {
@@ -191,13 +189,6 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
     public class LoadWallpaperListener implements OnLoadMoreListener {
         private static final String WALLPAPER_LIST_URL = "http://" + Constants.PC_IP +":9090/wallpaper/list";
         static final int PAGE_SIZE = 20;
-        private SwipeToLoadLayout wallpaper_swipe_layout;
-        private WallPaperRecyclerViewAdapter rv_adapter; // recyclerView的adapter。
-
-        public LoadWallpaperListener (SwipeToLoadLayout wallpaper_swipe_layout, WallPaperRecyclerViewAdapter adapter) {
-            this.wallpaper_swipe_layout = wallpaper_swipe_layout;
-            this.rv_adapter = adapter;
-        }
 
         // 触发上拉加载事件时，调用该方法。
         @Override
