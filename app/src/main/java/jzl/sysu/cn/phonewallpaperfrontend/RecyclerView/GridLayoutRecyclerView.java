@@ -1,26 +1,26 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.RecyclerView;
 
 import android.content.Context;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Layout;
 import android.util.AttributeSet;
 
-public class AutofitRecyclerView extends RecyclerView {
+public class GridLayoutRecyclerView extends RecyclerView {
     private LayoutManager manager;
     private int spanCount = 2;
 
-    public AutofitRecyclerView(Context context) {
+    public GridLayoutRecyclerView(Context context, int spanCount) {
         super(context);
         init(context);
+        this.spanCount = spanCount;
     }
 
-    public AutofitRecyclerView(Context context, AttributeSet attrs) {
+    public GridLayoutRecyclerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
-    public AutofitRecyclerView(Context context, AttributeSet attrs, int defStyle) {
+    public GridLayoutRecyclerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
     }
@@ -30,7 +30,7 @@ public class AutofitRecyclerView extends RecyclerView {
     }
 
     private void init(Context context) {
-        manager = new GridLayoutManager(context, 2, VERTICAL, false);
+        manager = new GridLayoutManager(context, spanCount, VERTICAL, false);
         setLayoutManager(manager);
     }
 
@@ -40,5 +40,4 @@ public class AutofitRecyclerView extends RecyclerView {
         super.onMeasure(widthSpec, heightSpec);
         ((GridLayoutManager)getLayoutManager()).setSpanCount(spanCount);
     }
-
 }

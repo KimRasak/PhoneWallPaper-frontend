@@ -22,12 +22,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.ViewWallpaperActivity;
-import jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView;
+import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.DataItem.WallPaperDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.WallPaperRecyclerViewAdapter;
+import jzl.sysu.cn.phonewallpaperfrontend.Util;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -43,6 +44,7 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
 
     public static final MediaType FORM_CONTENT_TYPE
             = MediaType.parse("application/json; charset=utf-8");
+    private static final String CLICK_URL = "http://" + Constants.PC_IP +":9090/wallpaper/click";
 
     public WallPaperListContentFragment() {
         // Required empty public constructor
@@ -109,6 +111,68 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         return requestBody;
     }
 
+    private RequestBody createClickRequestBody(String wallpaperId) {
+        JSONObject data = new JSONObject();
+        try {
+            data.put("wallpaperId", wallpaperId);
+            // data.put("sort", sort);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        Log.i("RepoPgae", data.toString());
+        return Util.buildAuthRequestBody(data, getActivity().getApplicationContext());
+    }
+
+    private void click(final WallPaperDataItem dataItem) {
+        String wallpaperId = dataItem.getId();
+        RequestBody requestBody = createClickRequestBody(wallpaperId);
+        String url = CLICK_URL;
+        Request request = new Request.Builder().url(url).post(requestBody).build();
+
+        // 接收壁纸信息的回调函数。
+        OkHttpClient okHttpClient = new OkHttpClient();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {}
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject res = null;
+                try {
+                    res = new JSONObject(response.body().string());
+                    Log.i("wallpaper click", res.toString());
+
+                    if (res.getInt("code") != 0)
+                        throw new IllegalArgumentException();
+
+                    if (res.getInt("code") == 0) {
+                        // 获取点击项的信息
+                        String wallpaperId = dataItem.getId();
+                        String wallpaperSrc = dataItem.getImgSrc();
+                        int likeNum = dataItem.getLikeNum();
+
+                        // 前往“查看图片”页面
+                        Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
+                        intent.putExtra("wallpaperId", wallpaperId);
+                        intent.putExtra("wallpaperSrc", wallpaperSrc);
+                        intent.putExtra("likeNum", likeNum);
+                        startActivity(intent);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getContext(), "点击失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     @Override
     public void onItemClick(View view, int position) {
         // 点击某张图片后执行。
@@ -116,18 +180,8 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         boolean image_loaded = adapter.getItem(position).getImgBytes() != null;
         Toast.makeText(view.getContext(), "加载第" + position + "张图片.图片尺寸：" + view.getWidth() + " " + view.getHeight(), Toast.LENGTH_SHORT).show();
 
-        // 获取WallPaperDataItem
         WallPaperDataItem dataItem = adapter.getItem(position);
-        String wallpaperId = dataItem.getId();
-        String wallpaperSrc = dataItem.getImgSrc();
-        int likeNum = dataItem.getLikeNum();
-
-        // 创建Intent
-        Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
-        intent.putExtra("wallpaperId", wallpaperId);
-        intent.putExtra("wallpaperSrc", wallpaperSrc);
-        intent.putExtra("likeNum", likeNum);
-        startActivity(intent);
+        click(dataItem);
     }
 
     public interface OnFragmentInteractionListener {

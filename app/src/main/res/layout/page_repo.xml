@@ -5,10 +5,10 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical">
-    <jzl.sysu.cn.phonewallpaperfrontend.GridLayoutRecyclerView
+    <jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.GridLayoutRecyclerView
         android:id="@+id/rv_categories"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-    </jzl.sysu.cn.phonewallpaperfrontend.GridLayoutRecyclerView>
+    </jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.GridLayoutRecyclerView>
 </LinearLayout>

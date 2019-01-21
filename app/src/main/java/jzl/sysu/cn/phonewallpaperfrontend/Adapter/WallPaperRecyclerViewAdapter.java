@@ -41,9 +41,12 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = mInflater.inflate(R.layout.item_wallpaper, parent, false);
+
+        // 设置图片宽高成比例（1.5:1）
         int margin = 1; // margin是1dp。
         float pxMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, margin * (spanCount + 1), context.getResources().getDisplayMetrics()); // 每行两个图，margin总共有4dp
-        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / 3); // 图片的宽比高为1.5:1，
+        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / spanCount / 1.5); // 图片的宽比高为1.5:1，
+
         return new ViewHolder(view);
     }
 

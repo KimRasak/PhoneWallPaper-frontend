@@ -16,6 +16,19 @@ public class Util {
         return RequestBody.create(FORM_CONTENT_TYPE, data.toString());
     }
 
+    public static RequestBody buildUserRequestBody(JSONObject data, Context applicationContext) {
+        LoginHelper helper = LoginHelper.getInstance(applicationContext);
+        Long userId = helper.getUserId();
+
+        try {
+            data.put("userId", userId);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return RequestBody.create(FORM_CONTENT_TYPE, data.toString());
+    }
+
     public static RequestBody buildAuthRequestBody(JSONObject data, Context applicationContext){
         LoginHelper helper = LoginHelper.getInstance(applicationContext);
 

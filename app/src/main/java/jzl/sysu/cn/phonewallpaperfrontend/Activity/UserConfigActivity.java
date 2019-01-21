@@ -23,6 +23,8 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -78,6 +80,10 @@ public class UserConfigActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_config);
 
         findView();
+
+        // 加载头像
+        String userIconSrc = getIntent().getStringExtra("userIconSrc");
+        Glide.with(this).load(userIconSrc).into(userIcon);
 
         final LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
 

@@ -1,23 +1,27 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Page;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView;
+import java.util.ArrayList;
+
+import jzl.sysu.cn.phonewallpaperfrontend.Adapter.LocalRecyclerViewAdapter;
+import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView;
+import jzl.sysu.cn.phonewallpaperfrontend.DataItem.LocalWallpaper;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
+import jzl.sysu.cn.phonewallpaperfrontend.LocalHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
@@ -37,16 +41,15 @@ public class UserPgae extends Fragment{
     // 本地壁纸栏
     private LinearLayout localLayout; // 有壁纸时显示
     private AutofitRecyclerView rvLocal;
+    private LocalRecyclerViewAdapter localAdapter;
     private ConstraintLayout noWallpaperLayout; // 无壁纸时显示
-    private String LOCAL_WALLPAPER;
 
     public UserPgae() {
         // Required empty public constructor
     }
 
     public static UserPgae newInstance(String param1, String param2) {
-        UserPgae fragment = new UserPgae();
-        return fragment;
+        return new UserPgae();
     }
 
     @Override
@@ -60,6 +63,7 @@ public class UserPgae extends Fragment{
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.page_user, container, false);
 
+        // find views.
         rvLocal = view.findViewById(R.id.rv_local);
         localLayout = view.findViewById(R.id.local_layout);
         noWallpaperLayout = view.findViewById(R.id.no_wallpaper_layout);
@@ -78,7 +82,7 @@ public class UserPgae extends Fragment{
         Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
 
         changeUserFragment(helper.isLoggedIn(getActivity()));
-        loadLocalWallpaper();
+        setLocalLayout();
         super.onResume();
     }
 
@@ -100,26 +104,25 @@ public class UserPgae extends Fragment{
         }
     }
 
-    public void loadLocalWallpaper() {
-        SharedPreferences sp = getActivity().getSharedPreferences(getActivity().getPackageName(), Context.MODE_PRIVATE);
-        String localWallpaperStr = sp.getString(LOCAL_WALLPAPER, "[]");
+    public void setLocalLayout() {
+        // 每行3列图片
+        int spanCount = 3;
 
-        try {
-            JSONArray localWallpapers = new JSONArray(localWallpaperStr);
-            for (int i = 0; i < localWallpapers.length(); i++) {
-                String path = localWallpapers.getString(i);
-            }
+        // 设置Adapter
+        ArrayList<LocalWallpaper> data = LocalHelper.load(getActivity());
+        localAdapter = new LocalRecyclerViewAdapter(getContext(), data, spanCount);
+        rvLocal.setAdapter(localAdapter);
 
-            boolean hasLocal = localWallpapers.length() > 0;
-            displayLocalLayout(hasLocal);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        // 设置layout Manager
+        GridLayoutManager manager = new GridLayoutManager(getActivity(), spanCount, RecyclerView.VERTICAL, false);
+        rvLocal.setLayoutManager(manager);
 
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
-//        editor.putString("username", "Tom");
-//        editor.putInt("password", 123456);
-//        editor.commit();
+        // 刷新Adapter
+        localAdapter.notifyDataSetChanged();
+
+        // 如果没有本地下载，则不展示该layout
+        boolean hasLocal = data.size() > 0;
+        displayLocalLayout(hasLocal);
     }
 
     private void displayLocalLayout(boolean hasLocal) {

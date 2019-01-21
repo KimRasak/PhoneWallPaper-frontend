@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CategoryDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.CategoryRecyclerViewAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
-import jzl.sysu.cn.phonewallpaperfrontend.GridLayoutRecyclerView;
+import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.GridLayoutRecyclerView;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.WallpaperListActivity;
 import okhttp3.Call;

@@ -1,8 +1,16 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
@@ -24,11 +32,26 @@ import android.widget.Toast;
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
 import com.aspsine.swipetoloadlayout.SwipeToLoadLayout;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.bumptech.glide.request.target.DrawableImageViewTarget;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.SizeReadyCallback;
+import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.transition.Transition;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -36,6 +59,7 @@ import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CommentDataItem;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.CommentsAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
+import jzl.sysu.cn.phonewallpaperfrontend.LocalHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
@@ -58,8 +82,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     ImageView likeImage;
     int likeNum;
     TextView tvLikeNum;
-    LinearLayout collectLayout;
-    ImageView collectImage;
     LinearLayout downloadLayout;
 
     // 抬头区（位于评论区上方）
@@ -72,6 +94,9 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     RecyclerView comments;
     LoadMoreFooterView swipe_load_more_footer;
     LoadCommentsListener loadCommentsListener;
+
+    // 下载框
+    ProgressDialog progressDialog;
 
     final static String LIKE_WALLPAPER_URL = "http://" + Constants.PC_IP + ":9090/relationship/like";
     final static String GET_RELATIONSHIP_URL = "http://" + Constants.PC_IP + ":9090/relationship/get";
@@ -105,28 +130,20 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // 设置点赞、收藏图片的激活状态。
         checkRelationshipState();
         setLikeNum(likeNum);
+        likeLayout.setVisibility(View.INVISIBLE);
         // “点赞”按钮
         likeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean isLike = (boolean)likeImage.getTag();
                 if (!isLike) {
-                    setLikeImage(true);
                     likeWallpaper(true);
+                    setLikeImage(true);
 
                 } else {
-                    setLikeImage(false);
                     likeWallpaper(false);
+                    setLikeImage(false);
                 }
-            }
-        });
-
-        // “收藏”按钮
-        collectImage.setTag(false); // 是否已收藏
-        collectLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
             }
         });
 
@@ -134,7 +151,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         downloadLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                setAsWallpaper();
             }
         });
 
@@ -178,10 +195,8 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // 中间栏
         likeLayout = findViewById(R.id.likeLayout);
         tvLikeNum = findViewById(R.id.likeNum);
-        collectLayout = findViewById(R.id.collectLayout);
         downloadLayout = findViewById(R.id.downloadLayout);
         likeImage = findViewById(R.id.likeImage);
-        collectImage = findViewById(R.id.collectImage);
 
         // 抬头区
         commentsTitleLayout = findViewById(R.id.commentsTitleLayout);
@@ -194,6 +209,59 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         commentsLayout = findViewById(R.id.commentsSwipeLayout);
         comments = findViewById(R.id.swipe_target);
         swipe_load_more_footer = findViewById(R.id.swipe_load_more_footer);
+    }
+
+    public void showProgressDialog(Context mContext, String text) {
+        // 弹出加载图片框
+        progressDialog = null;
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(mContext);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        }
+        progressDialog.setMessage(text);	//设置内容
+        progressDialog.setCancelable(false);//点击屏幕和按返回键都不能取消加载框
+        progressDialog.show();
+    }
+
+    public Boolean dismissProgressDialog() {
+        // 收回加载图片框
+        if (progressDialog != null){
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+                Toast.makeText(this, "下载完成", Toast.LENGTH_SHORT).show();
+                return true;//取消成功
+            }
+        }
+        return false;//已经取消过了，不需要取消
+    }
+
+    private void setAsWallpaper() {
+        showProgressDialog(this, "正在下载图片（约等待10秒）");
+
+        RequestBuilder builder = Glide.with(this).downloadOnly().load(wallpaperSrc).listener(new RequestListener<File>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<File> target, boolean isFirstResource) {
+                return false;
+            }
+
+            @Override
+            public boolean onResourceReady(File resource, Object model, Target<File> target, DataSource dataSource, boolean isFirstResource) {
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(resource);
+                    Bitmap bmp = BitmapFactory.decodeStream(fis);
+                    File file = new File(getFilesDir(), wallpaperId);
+
+                    LocalHelper.save(ViewWallpaperActivity.this, bmp, wallpaperId);
+                    dismissProgressDialog();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+                return false;
+            }
+        });
+        builder.preload();
     }
 
     @Override
@@ -272,21 +340,10 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         }
     }
 
-    public void setCollectImage(Boolean isCollect) {
-        collectImage.setTag(isCollect);
-        if (isCollect) {
-
-        } else {
-
-        }
-    }
-
     public void likeWallpaperFail(boolean isLike) {
-        Looper.prepare();
         setLikeImage(!isLike);
         setLikeNum(!isLike);
         Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
-        Looper.loop();
     }
 
     public void likeWallpaper(final boolean isLike) {
@@ -304,23 +361,28 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // 建立向服务器发送的Request
         String url = LIKE_WALLPAPER_URL;
         JSONObject data = new JSONObject();
+        // Log.i("like_wallpaper", isLike + " ");
         try {
             data.put("wallpaperId", wallpaperId);
-            data.put("isLike", isLike);
+            data.put("like", isLike);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-        RequestBody requestBody = Util.buildRequestBody(data);
+        RequestBody requestBody = Util.buildAuthRequestBody(data, getApplicationContext());
         OkHttpClient okHttpClient = new OkHttpClient();
         Request request = new Request.Builder().url(url).post(requestBody).build();
-
 
         // 接收壁纸信息的回调函数。
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                likeWallpaperFail(isLike);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        likeWallpaperFail(isLike);
+                    }
+                });
             }
 
             @Override
@@ -334,13 +396,21 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                         String msg = responseJsonObject.getString("message");
 
                         if (code == 0) {
-                            Looper.prepare();
-                            Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞成功", Toast.LENGTH_SHORT).show();
-                            Looper.loop();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞成功", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         } else {
                             // 服务器返回失败条文，点赞失败。
                             Log.i("LikeWallpaper", msg);
-                            likeWallpaperFail(isLike);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    likeWallpaperFail(isLike);
+                                }
+                            });
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -374,11 +444,9 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         tvLikeNum.setText(String.valueOf(num));
     }
 
-    public void setMiddleLayoutState(Boolean isLike, Boolean isCollect) {
+    public void setMiddleLayoutState(Boolean isLike) {
         // 仅当查询用户与壁纸的点赞、收藏关系时调用。
-        collectImage.setTag(isCollect);
         setLikeImage(isLike);
-        setCollectImage(isCollect);
     }
 
     public void checkRelationshipState() {
@@ -389,7 +457,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        RequestBody requestBody = Util.buildRequestBody(data);
+        RequestBody requestBody = Util.buildUserRequestBody(data, getApplicationContext());
         OkHttpClient okHttpClient = new OkHttpClient();
 
         Request request = new Request.Builder().url(url).post(requestBody).build();
@@ -399,7 +467,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
             @Override
             public void onFailure(Call call, IOException e) {
-                setMiddleLayoutState(false, false);
+                setMiddleLayoutState(false);
                 Log.i("checkRelationshipState", "与服务器连接失败");
             }
 
@@ -411,9 +479,16 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                     JSONObject relationship = new JSONObject(responseString);
                     int code = relationship.getInt("code");
                     if (code == 0) {
-                        Boolean isLike = relationship.getBoolean("isLike");
-                        Boolean isCollect = relationship.getBoolean("isCollect");
-                        setMiddleLayoutState(isLike, isCollect);
+                        final Boolean isLike = relationship.getBoolean("isLike");
+                        final Boolean isCollect = relationship.getBoolean("isCollect");
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                likeLayout.setVisibility(View.VISIBLE);
+                                setMiddleLayoutState(isLike);
+                            }
+                        });
                     } else {
                         String msg = relationship.getString("message");
                         Log.i("ViewWallpaper", "get relationship, error: " + msg);

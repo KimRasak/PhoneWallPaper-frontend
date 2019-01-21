@@ -30,13 +30,13 @@
             android:layout_height="wrap_content"
             android:text="本地壁纸"
             android:textSize="14sp"/>
-        <jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView
+        <jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView
             android:id="@+id/rv_local"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/white">
 
-        </jzl.sysu.cn.phonewallpaperfrontend.AutofitRecyclerView>
+        </jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView>
     </LinearLayout>
 
 

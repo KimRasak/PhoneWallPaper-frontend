@@ -44,7 +44,7 @@ public class UserInfoFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_info, container, false);
 
@@ -54,6 +54,7 @@ public class UserInfoFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), UserConfigActivity.class);
+                intent.putExtra("userIconSrc", userIconSrc);
                 startActivityForResult(intent, Constants.REQUEST_CHANGE_USER_CONFIG);
             }
         });
