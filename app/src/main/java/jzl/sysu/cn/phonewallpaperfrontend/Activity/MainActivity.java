@@ -11,6 +11,8 @@ import android.widget.Toast;
 
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
 import com.ashokvarma.bottomnavigation.BottomNavigationItem;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.tencent.connect.common.Constants;
 import com.tencent.tauth.Tencent;
 import org.json.JSONObject;
@@ -29,7 +31,6 @@ import jzl.sysu.cn.phonewallpaperfrontend.Adapter.SectionsPagerAdapter;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationBar
         .OnTabSelectedListener, ViewPager.OnPageChangeListener,
-        RecommendationPgae.OnFragmentInteractionListener, UserPgae.OnFragmentInteractionListener,
         LoginFragment.LoginFragmentListener{
     private ViewPager viewPager;
     private BottomNavigationBar bottomNavigationBar;
@@ -50,11 +51,18 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
         findView();
         initBottomNavitionBar();
         initViewPager();
-        initLoginHelper();
+        // initLoginHelper();
+        // initImageLoader();
+    }
+
+    private void initImageLoader() {
+        // Create global configuration and initialize ImageLoader with this config
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
+        ImageLoader.getInstance().init(config);
     }
 
     private void initLoginHelper() {
-        LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
+        LoginHelper helper = LoginHelper.getInstance();
         listener = helper.new QQLoginListener(this);
         helper.init(this);
     }
@@ -69,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
         bottomNavigationBar.clearAll();
         bottomNavigationBar.setMode(BottomNavigationBar.MODE_FIXED);
         bottomNavigationBar.setBackgroundStyle(BottomNavigationBar.BACKGROUND_STYLE_STATIC);
+        // bottomNavigationBar.setPadding(0, 10, 10, 0);
         bottomNavigationBar
                 .addItem(new BottomNavigationItem(R.drawable.ic_outline_favorite_border_24px, "推荐"))
                 .addItem(new BottomNavigationItem(R.drawable.ic_outline_color_lens_24px, "图库"))
@@ -111,24 +120,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
     public void onTabUnselected(int position) {}
     @Override
     public void onTabReselected(int position) {}
-    @Override
-    public void onFragmentInteraction(Uri uri) {}
-
-
-    @Override
-    public void onFragmentInteraction(JSONObject jsonObject) {
-        Toast.makeText(MainActivity.this, jsonObject.toString(), Toast.LENGTH_SHORT).show();
-    }
 
     public UserPgae getUserPgae() {
         return userPgae;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == Constants.REQUEST_LOGIN){
-            Tencent.onActivityResultData(requestCode, resultCode, data, listener);
-        }
     }
 
     // 当点击某个登陆按键时处理。
@@ -140,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
 
     public void doLoginQQ() {
         // 登陆QQ
-        final LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
+        final LoginHelper helper = LoginHelper.getInstance();
         helper.logInQQ(MainActivity.this, listener);
     }
 }

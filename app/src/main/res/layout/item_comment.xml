@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="60dp">
+    android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/user_icon"
@@ -17,28 +17,48 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
-    <TextView
-        android:id="@+id/user_name"
+    <LinearLayout
+        android:id="@+id/user_name_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:text="用户名"
         app:layout_constraintStart_toEndOf="@+id/user_icon"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/user_icon">
+
+        <TextView
+            android:id="@+id/user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="用户名" />
+
+        <TextView
+            android:id="@+id/reply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dp"
+            android:text="回复："/>
+
+        <TextView
+            android:id="@+id/to_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="被回复人"/>
+
+    </LinearLayout>
 
     <me.codeboy.android.aligntextview.CBAlignTextView
         android:id="@+id/comment_content"
-        android:layout_width="200dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginRight="16dp"
         android:gravity="left"
         android:inputType="textMultiLine"
         android:maxLines="10"
         android:text="这个壁纸不错"
+        app:layout_constraintTop_toBottomOf="@id/user_name_layout"
         app:layout_constraintLeft_toRightOf="@id/user_icon"
-        app:layout_constraintTop_toBottomOf="@id/user_name"
+        app:layout_constraintRight_toRightOf="parent"
         tools:text="这个壁纸不错" />
 </android.support.constraint.ConstraintLayout>

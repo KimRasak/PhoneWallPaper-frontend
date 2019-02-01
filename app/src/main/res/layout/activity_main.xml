@@ -16,6 +16,10 @@
         android:id="@+id/bottom_navigation_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="0dp"
+        app:bnbBackgroundColor="@color/bnbBackground"
+        app:bnbActiveColor="@color/bnbActive"
+        app:bnbInactiveColor="@color/bnbInactive"
         android:layout_gravity="bottom"/>
 
 </LinearLayout>

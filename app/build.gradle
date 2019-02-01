@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "jzl.sysu.cn.phonewallpaperfrontend"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -27,11 +27,32 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:27.1.1'
     implementation 'com.android.support:cardview-v7:27.1.1'
     implementation 'com.android.support:support-v4:27.1.1'
-    implementation 'com.github.Aspsine:SwipeToLoadLayout:1.0.4'
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation 'com.github.bumptech.glide:glide:4.8.0'
-    implementation 'me.codeboy.android:align-text-view:2.3.2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    // 圆形imageview
+    implementation 'de.hdodenhof:circleimageview:3.0.0'
+
+    // 自动对齐TextView
+    implementation 'me.codeboy.android:align-text-view:2.3.2'
+
+    // 上拉、下拉加载框
+    implementation 'com.github.Aspsine:SwipeToLoadLayout:1.0.4'
+
+    // QQ第三方登陆平台
     implementation files('libs/open_sdk_r6008_lite.jar')
+
+    // 图片加载
+    implementation 'com.github.bumptech.glide:glide:3.7.0'
+    implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+
+    //导入retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.google.code.gson:gson:2.8.2'//Gson 库
+    //下面两个是RxJava 和 RxAndroid
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'//转换器，请求结果转换成Model
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'//配合Rxjava 使用
 }

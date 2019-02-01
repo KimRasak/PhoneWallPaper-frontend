@@ -1,29 +1,36 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.app.ProgressDialog;
+import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.os.Handler;
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -32,54 +39,61 @@ import android.widget.Toast;
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
 import com.aspsine.swipetoloadlayout.SwipeToLoadLayout;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.RequestBuilder;
-import com.bumptech.glide.RequestManager;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
-import com.bumptech.glide.request.target.DrawableImageViewTarget;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.SizeReadyCallback;
-import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.request.transition.Transition;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.WallpaperService;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.ClickBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.GetCommentBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.LikeBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.PutCommentBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.SetBody;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CommentDataItem;
+import jzl.sysu.cn.phonewallpaperfrontend.LocalHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.Comment;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.CommentsAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
-import jzl.sysu.cn.phonewallpaperfrontend.LocalHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.ClickResponse;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.CodeResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class ViewWallpaperActivity extends AppCompatActivity implements CommentsAdapter.ItemClickListener {
     // 壁纸
     ImageView wallpaper;
-    String wallpaperId;
+    Long wallpaperId;
     String wallpaperSrc;
 
     // 中间栏
     LinearLayout likeLayout;
     ImageView likeImage;
+    boolean isLike = false;
+    boolean isPostingLike = false;
     int likeNum;
     TextView tvLikeNum;
     LinearLayout downloadLayout;
@@ -88,22 +102,21 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     ConstraintLayout commentsTitleLayout;
     Button btnAddComments;
 
-    // 热门评论、评论区
+    // 热门评论区
     RecyclerView hotComments;
+    CommentsAdapter hotCommentsAdapter;
+
+    // 评论区
     SwipeToLoadLayout commentsLayout;
     RecyclerView comments;
+    CommentsAdapter commentsAdapter;
     LoadMoreFooterView swipe_load_more_footer;
     LoadCommentsListener loadCommentsListener;
 
     // 下载框
     ProgressDialog progressDialog;
 
-    final static String LIKE_WALLPAPER_URL = "http://" + Constants.PC_IP + ":9090/relationship/like";
-    final static String GET_RELATIONSHIP_URL = "http://" + Constants.PC_IP + ":9090/relationship/get";
-    final static String ADD_COMMENT_URL = "http://" + Constants.PC_IP +":9090/comment/put";
-
-    public static final MediaType FORM_CONTENT_TYPE
-            = MediaType.parse("application/json; charset=utf-8");
+    private int SET_WALLPAPER = 166;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,79 +129,30 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
         // 从intent获取数据。
         Intent intent = getIntent();
-        wallpaperId = intent.getStringExtra("wallpaperId");
+        wallpaperId = intent.getLongExtra("wallpaperId", -1L);
         wallpaperSrc = intent.getStringExtra("wallpaperSrc");
-        likeNum = intent.getIntExtra("likeNum", 0);
+        likeNum = intent.getIntExtra("likeNum", -1);
 
-        if (wallpaperSrc == null)
+        if (wallpaperSrc == null || wallpaperId == -1L || likeNum == -1) // 错误进入该页
             return;
 
-        // 获取壁纸。
+        // 显示壁纸。
+        wallpaper.post(new Runnable() {
+            @Override
+            public void run() {
+                double scale = Util.getWindowScale(ViewWallpaperActivity.this);
+                Log.i("wallpaperActivity", "measured width: " + wallpaper.getMeasuredWidth());
+                ViewGroup.LayoutParams lp = wallpaper.getLayoutParams();
+                lp.height =  (int)(wallpaper.getMeasuredWidth() * scale );
+                wallpaper.setLayoutParams(lp);
+                Log.i("wallpaperActivity", "height: " + lp.height);
+            }
+        });
         Glide.with(this).load(wallpaperSrc).into(wallpaper);
 
-        // 中间栏
-        // 设置点赞、收藏图片的激活状态。
-        checkRelationshipState();
-        setLikeNum(likeNum);
-        likeLayout.setVisibility(View.INVISIBLE);
-        // “点赞”按钮
-        likeLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean isLike = (boolean)likeImage.getTag();
-                if (!isLike) {
-                    likeWallpaper(true);
-                    setLikeImage(true);
-
-                } else {
-                    likeWallpaper(false);
-                    setLikeImage(false);
-                }
-            }
-        });
-
-        // “设为壁纸”按钮
-        downloadLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setAsWallpaper();
-            }
-        });
-
-        // 设置滑动Layout的底部。
-        commentsLayout.setLoadMoreFooterView(swipe_load_more_footer);
-
-        // 设置RecyclerView的Adapter。
-        ArrayList<CommentDataItem> hotCommentsData = new ArrayList<>();
-        ArrayList<CommentDataItem> commentsData = new ArrayList<>();
-        CommentsAdapter hotCommentsAdapter = new CommentsAdapter(this, hotCommentsData);
-        CommentsAdapter commentsAdapter = new CommentsAdapter(this, commentsData);
-        hotComments.setAdapter(hotCommentsAdapter);
-        comments.setAdapter(commentsAdapter);
-
-        // 设置RecyclerView的LayoutManager。
-        hotComments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        comments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-
-        // 设置RecyclerView点击回复
-        hotCommentsAdapter.setClickListener(this);
-        commentsAdapter.setClickListener(this);
-
-        // 无热门评论时，隐藏hotComments。
-        if (commentsData.size() == 0)
-            hotComments.setVisibility(View.GONE);
-
-        // 绑定“添加评论”按钮点击事件
-        btnAddComments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popEditCommentWindow();
-            }
-        });
-
-        loadCommentsListener = new LoadCommentsListener(commentsLayout, commentsAdapter);
-        commentsLayout.setOnLoadMoreListener(loadCommentsListener);
-        loadCommentsListener.loadWallPaperIfEmpty();
+        initMiddleLayout();
+        initHotCommentsLayout();
+        initCommentsLayout();
     }
 
     public void findView() {
@@ -207,455 +171,363 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
 
         // 评论区
         commentsLayout = findViewById(R.id.commentsSwipeLayout);
-        comments = findViewById(R.id.swipe_target);
+        comments = findViewById(R.id.rvComments);
         swipe_load_more_footer = findViewById(R.id.swipe_load_more_footer);
     }
 
-    public void showProgressDialog(Context mContext, String text) {
-        // 弹出加载图片框
-        progressDialog = null;
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(mContext);
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        }
-        progressDialog.setMessage(text);	//设置内容
-        progressDialog.setCancelable(false);//点击屏幕和按返回键都不能取消加载框
-        progressDialog.show();
+    /* 中间栏 */
+    private void initMiddleLayout() {
+        /*
+            初始化中间栏。点赞面板先处于无法点击的状态，在加载了评论和点赞关系后，点赞面板才可以点击。
+        */
+        // 设置点赞面板不激活。
+        disableLikeLayout();
+
+        // 设置下载面板
+        initDownloadLayout();
+
+        // 评论面板
+        initCommentsLayout();
+
+        // 获取点赞、评论数据
+        initData();
     }
 
-    public Boolean dismissProgressDialog() {
-        // 收回加载图片框
-        if (progressDialog != null){
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-                Toast.makeText(this, "下载完成", Toast.LENGTH_SHORT).show();
-                return true;//取消成功
-            }
-        }
-        return false;//已经取消过了，不需要取消
+    /* 点赞面板 */
+    private void disableLikeLayout() {
+        // 图标显示灰色
+        VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_favorite_24px, getTheme());
+        vectorDrawableCompat.setTint(getResources().getColor(R.color.gray));
+        likeImage.setImageDrawable(vectorDrawableCompat);
+
+        // 表示文字加载中
+        tvLikeNum.setText(String.valueOf(likeNum));
+
+        // 点击不响应
+        likeLayout.setOnClickListener(null);
     }
 
-    private void setAsWallpaper() {
-        showProgressDialog(this, "正在下载图片（约等待10秒）");
-
-        RequestBuilder builder = Glide.with(this).downloadOnly().load(wallpaperSrc).listener(new RequestListener<File>() {
+    private void initLikeLayout(final boolean isLike, int likeNum) {
+        changeLikeLayout(isLike, likeNum);
+        likeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<File> target, boolean isFirstResource) {
-                return false;
+            public void onClick(View v) {
+                likeWallpaper(!ViewWallpaperActivity.this.isLike);
             }
-
-            @Override
-            public boolean onResourceReady(File resource, Object model, Target<File> target, DataSource dataSource, boolean isFirstResource) {
-                FileInputStream fis = null;
-                try {
-                    fis = new FileInputStream(resource);
-                    Bitmap bmp = BitmapFactory.decodeStream(fis);
-                    File file = new File(getFilesDir(), wallpaperId);
-
-                    LocalHelper.save(ViewWallpaperActivity.this, bmp, wallpaperId);
-                    dismissProgressDialog();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-                return false;
-            }
-        });
-        builder.preload();
-    }
-
-    @Override
-    public void onItemClick(View view, int position) {
-        popEditCommentWindow();
-    }
-
-    public void popEditCommentWindow() {
-        // 弹出评论框。
-        AlertDialog.Builder builder = new AlertDialog.Builder(ViewWallpaperActivity.this);
-        builder.setTitle("请输入评论");
-        LayoutInflater inflater = getLayoutInflater();
-        final View editCommentLayout = inflater.inflate(R.layout.layout_edit_comment, (ViewGroup) findViewById(R.id.commentEditLayout));
-        builder.setView(editCommentLayout);
-
-        // 点击“是”时，发表评论。
-        builder.setPositiveButton("是", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                EditText editText = editCommentLayout.findViewById(R.id.commentEditText);
-                String content = editText.getText().toString();
-                putCommentToServer(null, content);
-            }
-        });
-        builder.setNegativeButton("否", null);
-        builder.show();
-    }
-
-    public void putCommentToServer(String toCommentId, final String content) {
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Log.i("ViewWallpaper", wallpaperId);
-
-        JSONObject data = new JSONObject();
-        try {
-            data.put("wallpaperId", wallpaperId);
-            data.put("toCommentId", toCommentId);
-            data.put("content", content);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        RequestBody requestBody = Util.buildAuthRequestBody(data, getApplicationContext());
-        Request request = new Request.Builder().url(ADD_COMMENT_URL).post(requestBody).build();
-
-        // 接收壁纸信息的回调函数。
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onResponse(Call call, final Response response) throws IOException {
-                // 显示评论信息
-                Looper.prepare();
-                if (response.body() != null)
-                    Toast.makeText(ViewWallpaperActivity.this, response.body().string() + "\n" + content, Toast.LENGTH_LONG).show();
-                loadCommentsListener.loadComments();
-                Looper.loop();
-            }
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Looper.prepare();
-                e.printStackTrace();
-                Toast.makeText(ViewWallpaperActivity.this, "添加评论失败", Toast.LENGTH_LONG).show();
-                Looper.loop();
-            }
-
         });
     }
 
-    public void setLikeImage(Boolean isLike) {
-        likeImage.setTag(isLike);
+    private void changeLikeLayout(boolean isLike, int likeNum) {
+        Log.i("likeLayout", isLike + "");
         if (isLike) {
+            // 实心红色爱心
             VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_favorite_24px, getTheme());
-            //你需要改变的颜色
             vectorDrawableCompat.setTint(getResources().getColor(R.color.red));
             likeImage.setImageDrawable(vectorDrawableCompat);
+
         } else {
-            likeImage.setImageResource(R.drawable.ic_baseline_favorite_border_24px);
+            // 空心黑色爱心
+            VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_favorite_border_24px, getTheme());
+            vectorDrawableCompat.setTint(getResources().getColor(R.color.black));
+            likeImage.setImageDrawable(vectorDrawableCompat);
         }
+
+        tvLikeNum.setText(String.valueOf(likeNum));
     }
 
-    public void likeWallpaperFail(boolean isLike) {
-        setLikeImage(!isLike);
-        setLikeNum(!isLike);
-        Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
-    }
+    private void likeWallpaper(final boolean isLike) {
+        // 点赞/取消点赞
+        final int newLikeNum = isLike ? (likeNum + 1) : (likeNum - 1);
 
-    public void likeWallpaper(final boolean isLike) {
-        // 点击"点赞"按钮后执行。
+        if (isPostingLike)
+            return;
+
+        isPostingLike = true;
 
         // 未登陆不可点赞。
-        if (!LoginHelper.getInstance(ViewWallpaperActivity.this).isLoggedIn(this)) {
+        LoginHelper helper = LoginHelper.getInstance();
+        if (!helper.isLoggedIn(this)) {
             Toast.makeText(ViewWallpaperActivity.this, "请先登陆", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // 先假装点赞成功。
-        setLikeNum(isLike);
+        // 先假装点击操作成功。
+        changeLikeLayout(isLike, newLikeNum);
 
-        // 建立向服务器发送的Request
-        String url = LIKE_WALLPAPER_URL;
-        JSONObject data = new JSONObject();
-        // Log.i("like_wallpaper", isLike + " ");
-        try {
-            data.put("wallpaperId", wallpaperId);
-            data.put("like", isLike);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        RequestBody requestBody = Util.buildAuthRequestBody(data, getApplicationContext());
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Request request = new Request.Builder().url(url).post(requestBody).build();
-
-        // 接收壁纸信息的回调函数。
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        likeWallpaperFail(isLike);
-                    }
-                });
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.body() != null) {
-                    String responseString = response.body().string();
-                    Log.i("LikeWallpaper", responseString);
-                    try {
-                        JSONObject responseJsonObject = new JSONObject(responseString);
-                        int code = responseJsonObject.getInt("code");
-                        String msg = responseJsonObject.getString("message");
-
-                        if (code == 0) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞成功", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        } else {
-                            // 服务器返回失败条文，点赞失败。
-                            Log.i("LikeWallpaper", msg);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    likeWallpaperFail(isLike);
-                                }
-                            });
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Looper.prepare();
-                        Toast.makeText(ViewWallpaperActivity.this, "点赞/取消点赞失败", Toast.LENGTH_SHORT).show();
-                        Looper.loop();
-                    }
-
+        // 发送请求
+        WallpaperService service = ApiManager.getInstance().getWallpaperService();
+        LikeBody body = new LikeBody(wallpaperId, isLike);
+        Observable<CodeResponse> ob = service.like(body);
+        ob.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<CodeResponse>() {
+                private void fail() {
+                    Util.showNetworkFailToast(ViewWallpaperActivity.this);
+                    changeLikeLayout(!isLike, likeNum);
+                    isPostingLike = false;
                 }
-            }
+                @Override
+                public void onError(Throwable e) { fail(); }
+                @Override
+                public void onNext(CodeResponse codeResponse) {
+                    if (codeResponse.isFail()) {
+                        fail();
+                        return;
+                    }
+                    ViewWallpaperActivity.this.isLike = !ViewWallpaperActivity.this.isLike;
+                    likeNum = newLikeNum;
+                    isPostingLike = false;
+                }
+                @Override
+                public void onComplete() {}
+                @Override
+                public void onSubscribe(Disposable d) {}
+
         });
     }
 
-    public void changeLikeNumText(int delta) {
-        int num = getLikeNum();
-        setLikeNum(num + delta);
-    }
-
-    public int getLikeNum() {
-        return Integer.valueOf(tvLikeNum.getText().toString());
-    }
-
-    public void setLikeNum(boolean isLike) {
-        int delta = isLike ? 1 : -1;
-        likeNum = likeNum + delta;
-        setLikeNum(likeNum);
-    }
-
-    public void setLikeNum(int num) {
-        likeNum = num;
-        tvLikeNum.setText(String.valueOf(num));
-    }
-
-    public void setMiddleLayoutState(Boolean isLike) {
-        // 仅当查询用户与壁纸的点赞、收藏关系时调用。
-        setLikeImage(isLike);
-    }
-
-    public void checkRelationshipState() {
-        String url = GET_RELATIONSHIP_URL;
-        JSONObject data = new JSONObject();
-        try {
-            data.put("wallpaperId", wallpaperId);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        RequestBody requestBody = Util.buildUserRequestBody(data, getApplicationContext());
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        Request request = new Request.Builder().url(url).post(requestBody).build();
-
-        // 接收壁纸信息的回调函数。
-        okHttpClient.newCall(request).enqueue(new Callback() {
-
+    /* 下载面板 */
+    private void initDownloadLayout() {
+        downloadLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                setMiddleLayoutState(false);
-                Log.i("checkRelationshipState", "与服务器连接失败");
-            }
+            public void onClick(View v) { setAsWallpaper(); }
+        });
+    }
 
+
+    private void fail() { Util.showNetworkFailToast(ViewWallpaperActivity.this); }
+
+    private void setAsWallpaper() {
+        // 显示下载框
+        showDownloadDialog(this);
+
+        final DisplayMetrics metrics = Util.setWallpaperManagerFitScreen(ViewWallpaperActivity.this);
+        final int width = metrics.widthPixels;
+        final int height = metrics.heightPixels;
+
+        // 设置图片链接
+        ImageLoader imageLoader = ImageLoader.getInstance();
+        // String tail = String.format(Locale.CHINA, "?x-oss-process=image/resize,m_fixed,w_%d,h_%d", width, height);
+        String tail = String.format(Locale.CHINA, "?x-oss-process=image/resize,m_fixed,w_%d,h_%d", width, height);
+        String scaleSrc = wallpaperSrc + tail;
+        // Log.i("viewWallpaper", scaleSrc);
+
+        // 下载图片
+        imageLoader.loadImage(wallpaperSrc, new SimpleImageLoadingListener(){
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String responseString = response.body().string();
-                Log.i("checkRelationship", responseString);
-                try {
-                    JSONObject relationship = new JSONObject(responseString);
-                    int code = relationship.getInt("code");
-                    if (code == 0) {
-                        final Boolean isLike = relationship.getBoolean("isLike");
-                        final Boolean isCollect = relationship.getBoolean("isCollect");
-
-                        runOnUiThread(new Runnable() {
+            public void onLoadingComplete(String imageUri, View view, final Bitmap bitmap) {
+                WallpaperService service = ApiManager.getInstance().getWallpaperService();
+                SetBody body = new SetBody(wallpaperId);
+                Observable<CodeResponse> ob = service.set(body);
+                ob.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(new Observer<CodeResponse>() {
                             @Override
-                            public void run() {
-                                likeLayout.setVisibility(View.VISIBLE);
-                                setMiddleLayoutState(isLike);
+                            public void onSubscribe(Disposable d) {}
+                            @Override
+                            public void onComplete() {}
+                            @Override
+                            public void onError(Throwable e) {
+                                Util.showNetworkFailToast(ViewWallpaperActivity.this);
+                                dismissDownloadDialog();
                             }
+                            @Override
+                            public void onNext(CodeResponse codeResponse) {
+                                Log.i("code response", codeResponse.getCode() + " ");
+                                if (codeResponse.isFail())
+                                    fail();
+
+                                // 设为壁纸
+                                Bitmap wallpaper = Util.centerCrop(bitmap, metrics);
+
+                                // Bitmap wallpaper = Bitmap.createScaledBitmap(bitmap, width, height, true);
+                                final WallpaperManager wallpaperManager = WallpaperManager.getInstance(ViewWallpaperActivity.this);
+                                try {
+                                    wallpaperManager.setBitmap(wallpaper);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                // 存入本地
+                                LocalHelper.save(ViewWallpaperActivity.this, bitmap, wallpaperId);
+                                dismissDownloadDialog();
+                            }
+
                         });
-                    } else {
-                        String msg = relationship.getString("message");
-                        Log.i("ViewWallpaper", "get relationship, error: " + msg);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         });
     }
 
-    public RequestBody createAddCommentRequestBody(String wallpaperId, String toCommentId, String content) {
-        if (toCommentId == null || toCommentId.equals("")) {
-            // 是对帖子的评论。
-            toCommentId = "-1";
-            // 设置JSONObject
-            JSONObject requestJsonObject = new JSONObject();
-            try {
-                // 获取授权信息
-                LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-                String openid = helper.getOpenId();
-                String accessToken = helper.getAccessToken();
-                String auth = helper.getAuth();
+    private void showDownloadDialog(Context mContext) {
+        // 弹出加载图片框
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(mContext);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        }
+        progressDialog.setMessage("正在下载图片（约等待10秒）");	//设置内容
+        progressDialog.setCancelable(false);//点击屏幕和按返回键都不能取消加载框
+        progressDialog.show();
+    }
 
-                requestJsonObject.put("openId", openid);
-                requestJsonObject.put("accessToken", accessToken);
-                requestJsonObject.put("auth", auth);
-                requestJsonObject.put("wallPaperId", wallpaperId);
-                requestJsonObject.put("toCommentId", toCommentId);
-                requestJsonObject.put("content", content);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            // 测试输出
-            Log.i("ViewActivity", requestJsonObject.toString());
-
-            // 设置RequestBody。格式为application/json
-            return RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-        } else {
-            // 是对评论的回复。
-            // 设置JSONObject
-            JSONObject requestJsonObject = new JSONObject();
-            try {
-                requestJsonObject.put("wallpaperId", wallpaperId);
-                requestJsonObject.put("toCommentId", toCommentId);
-                requestJsonObject.put("content", content);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            // 测试输出
-            Log.i("ViewActivity", requestJsonObject.toString());
-
-            // 设置RequestBody。格式为application/json
-            RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-            return requestBody;
+    public void dismissDownloadDialog() {
+        // 收回加载图片框
+        if (progressDialog != null && progressDialog.isShowing()){
+            progressDialog.dismiss();
         }
     }
 
+    /* 热门评论区 */
+    private void initHotCommentsLayout() {
+        ArrayList<Comment> data = new ArrayList<Comment>();
+        hotCommentsAdapter = new CommentsAdapter(this, data);
+        hotComments.setAdapter(hotCommentsAdapter);
+
+        // 设置RecyclerView的LayoutManager。
+        hotComments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        // 无热门评论时，隐藏hotComments。
+        if (data.size() == 0)
+            hotComments.setVisibility(View.GONE);
+
+        hotCommentsAdapter.setOnItemClickListener(this);
+    }
+
+    /* 评论区 */
+    private void initCommentsLayout() {
+        // 设置RecyclerView的Adapter。
+        commentsAdapter = new CommentsAdapter(this, new ArrayList<Comment>());
+        comments.setAdapter(commentsAdapter);
+        comments.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        // 设置RecyclerView点击回复
+        commentsAdapter.setOnItemClickListener(this);
+        SwipeToLoadLayout commentsSwipeLayout = findViewById(R.id.commentsSwipeLayout);
+
+        // 评论区加载
+        commentsLayout.setLoadMoreFooterView(swipe_load_more_footer);
+        commentsLayout.setOnLoadMoreListener(new LoadCommentsListener());
+
+        // 绑定“添加评论”按钮点击事件
+        btnAddComments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { popEditCommentWindow(-1L); } // -1代表被评论id为空
+        });
+    }
+
+    @Override
+    public void onItemClick(View view, int position) {
+        Log.i("sdf", position + " ");
+        Comment comment = commentsAdapter.get(position);
+        popEditCommentWindow(comment.getCid());
+    }
+
+    private void popEditCommentWindow(final Long toCommentId) {
+        // 弹出评论框。
+
+        // 设置外观
+        LayoutInflater inflater = getLayoutInflater();
+        final View layout = inflater.inflate(R.layout.layout_edit_comment, (ViewGroup) findViewById(R.id.commentEditLayout));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(ViewWallpaperActivity.this)
+            .setTitle("请输入评论")
+            .setView(layout)
+            .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    EditText etContent = layout.findViewById(R.id.commentEditText);
+                    String content = etContent.getText().toString();
+                    putCommentToServer(toCommentId, content);
+                }
+            })
+            .setNegativeButton("否", null);
+
+        builder.show();
+    }
+
+    private void putCommentToServer(Long toCommentId, final String content) {
+        WallpaperService service = ApiManager.getInstance().getWallpaperService();
+        PutCommentBody body = new PutCommentBody(wallpaperId, toCommentId, content);
+        Observable<Comment> ob = service.putComment(body);
+
+        ob.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<Comment>() {
+                @Override
+                public void onSubscribe(Disposable d) {}
+                @Override
+                public void onComplete() {}
+
+                private void fail() {  Util.showNetworkFailToast(ViewWallpaperActivity.this); }
+                @Override
+                public void onError(Throwable e) { fail(); }
+                @Override
+                public void onNext(Comment comment) {
+                    commentsAdapter.add(comment);
+                    commentsAdapter.notifyDataSetChanged();
+                }
+
+            });
+    }
+
+    private void loadComments(int startNum, int pageSize) {
+        WallpaperService service = ApiManager.getInstance().getWallpaperService();
+        GetCommentBody body = new GetCommentBody(wallpaperId, startNum, pageSize);
+        Observable<List<Comment>> ob = service.getComment(body);
+        ob.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<List<Comment>>() {
+                @Override
+                public void onNext(List<Comment> comments) {
+                    commentsAdapter.add(comments);
+                    commentsAdapter.notifyDataSetChanged();
+                    commentsLayout.setLoadingMore(false);
+                }
+                @Override
+                public void onSubscribe(Disposable d) {}
+                @Override
+                public void onError(Throwable e) {}
+                @Override
+                public void onComplete() {}
+            });
+
+
+    }
+
+    /* 获取壁纸点赞、评论信息 */
+    private void initData() {
+        WallpaperService service = ApiManager.getInstance().getWallpaperService();
+        ClickBody body = new ClickBody(wallpaperId);
+        Observable<ClickResponse> ob = service.click(body);
+        ob.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<ClickResponse>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {}
+                    @Override
+                    public void onNext(ClickResponse response) {
+                        List<Comment> comments = response.getComments();
+                        boolean isLike = response.getLike();
+
+                        ViewWallpaperActivity.this.isLike = isLike;
+                        initLikeLayout(isLike, likeNum);
+                        commentsAdapter.add(comments);
+                        commentsAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) { Util.showNetworkFailToast(ViewWallpaperActivity.this); }
+                    @Override
+                    public void onComplete() {}
+                });
+    }
+
+    /* 评论上拉响应 */
     public class LoadCommentsListener implements OnLoadMoreListener {
-        private static final String COMMENTS_LIST_URL = "http://" + Constants.PC_IP +":9090/comment/view";
-        static final int PAGE_SIZE = 20;
-        private SwipeToLoadLayout commentsLayout;
-        private CommentsAdapter adapter; // recyclerView的adapter。
-
-        public LoadCommentsListener(SwipeToLoadLayout commentsLayout, CommentsAdapter adapter) {
-            this.commentsLayout = commentsLayout;
-            this.adapter = adapter;
-        }
-
         // 触发上拉加载事件时，调用该方法。
         @Override
         public void onLoadMore() {
-            loadComments();
+            int startNum = commentsAdapter.getItemCount();
+            int pageSize = Constants.COMMENT_PAGE_SIZE;
+            loadComments(startNum, pageSize);
         }
-
-        public void loadWallPaperIfEmpty() {
-            if (isEmpty())
-                loadComments();
-        }
-
-        public boolean isEmpty() {
-            return adapter.getItemCount() == 0;
-        }
-
-
-        public void loadComments() {
-            String wallpaperId = ViewWallpaperActivity.this.wallpaperId;
-            int itemCount = adapter.getItemCount();
-            int pageSize = PAGE_SIZE;
-            int startNum = itemCount;
-            String url = COMMENTS_LIST_URL; // 手机应当连接本地wifi，并访问pc的本地ip
-
-            OkHttpClient okHttpClient = new OkHttpClient();
-            RequestBody requestBody = createLoadCommentRequestBody(wallpaperId, startNum, pageSize);
-            Request request = new Request.Builder().url(url).post(requestBody).build();
-
-            // 接收壁纸信息的回调函数。
-            okHttpClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.e("ViewActivity", e.getMessage());
-                    e.printStackTrace();
-                    commentsLayout.setLoadingMore(false);
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String responseString = response.body().string();
-                    try {
-                        JSONArray commentJsonArray = new JSONArray(responseString);
-
-                        for (int i = 0; i < commentJsonArray.length(); i++) {
-                            JSONObject itemJsonObject = commentJsonArray.getJSONObject(i);
-
-                            // 评论信息
-                            String cid = itemJsonObject.getString("cid");
-                            String wallpaperId = itemJsonObject.getString("wallpaperId");
-                            String content = itemJsonObject.getString("content");
-                            String toCommentId = itemJsonObject.getString("toCommentId");
-                            String fromUserId = itemJsonObject.getString("fromUserId");
-                            String toUserId = itemJsonObject.getString("toUserId");
-
-                            // 评论人信息
-                            String userIcon = itemJsonObject.getString("userIcon");
-                            String userName = itemJsonObject.getString("userName");
-                            String toUserName = itemJsonObject.getString("toUserName");
-
-                            CommentDataItem dataItem = new CommentDataItem(cid, wallpaperId, content,
-                                toCommentId, fromUserId, toUserId,
-                                userIcon, userName, toUserName);
-
-                            Log.i("ViewActivity", content);
-
-
-                            adapter.addDataItem(dataItem);
-                        }
-                        Log.i("ViewActivity", "评论数：" + commentJsonArray.length());
-                        commentsLayout.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.notifyDataSetChanged();
-                                commentsLayout.setLoadingMore(false);
-                            }
-                        });
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }
-
-        public RequestBody createLoadCommentRequestBody(String wallpaperId, int startNum, int pageSize) {
-            JSONObject requestJsonObject = new JSONObject();
-            try {
-                requestJsonObject.put("id", wallpaperId);
-                requestJsonObject.put("startNum", startNum);
-                requestJsonObject.put("pageSize", pageSize);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            Log.i("ViewActivity", requestJsonObject.toString());
-            //            // application/json
-            RequestBody requestBody = RequestBody.create(FORM_CONTENT_TYPE, requestJsonObject.toString());
-            return requestBody;
-        }
-    };
+    }
 }

@@ -8,7 +8,7 @@ import android.util.AttributeSet;
 
 public class AutofitRecyclerView extends RecyclerView {
     private LayoutManager manager;
-    private int spanCount = 2;
+    private int spanCount = 3;
 
     public AutofitRecyclerView(Context context) {
         super(context);

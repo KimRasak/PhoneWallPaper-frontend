@@ -16,10 +16,10 @@
         android:layout_marginTop="1dp"
         android:layout_marginBottom="1dp"
         android:contentDescription="a view for storing a phone wallpaper"
-        android:scaleType="fitXY"
+        android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_launcher" />
+        android:background="@color/gray"/>
 </android.support.constraint.ConstraintLayout>

@@ -14,17 +14,17 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.CategoryDataItem;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.Category;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 
 public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRecyclerViewAdapter.ViewHolder> {
     private Context context;
-    private List<CategoryDataItem> data;
+    private List<Category> data;
     private LayoutInflater mInflater;
-    private int spanCount = 3;
+    private int spanCount = 2;
     private CategoryRecyclerViewAdapter.ItemClickListener mClickListener;
 
-    public CategoryRecyclerViewAdapter(Context context, ArrayList<CategoryDataItem> data) {
+    public CategoryRecyclerViewAdapter(Context context, ArrayList<Category> data) {
         this.context = context;
         this.mInflater = LayoutInflater.from(context);
         this.data = data;
@@ -38,21 +38,18 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
         // 动态调整组件高度，而组件宽度由屏幕宽度决定。
         int margin = 4; // margin是1dp。
         float pxMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, margin * (spanCount + 1), context.getResources().getDisplayMetrics()); // 每行两个图，margin总共有4dp
-        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / 3); // 图片的宽比高为1.5:1，
-        int lWidth = view.getLayoutParams().width;
+        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / spanCount / 1.5); // 图片的宽比高为1.5:1
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         // 获取数据。
-        CategoryDataItem item = data.get(position);
+        Category item = data.get(position);
 
         // 绑定视图。
         holder.name.setText(item.getName());
         holder.background.setImageResource(R.drawable.ic_launcher_foreground);
-
-        Log.i("RepoPage", "load holder: " + position);
 //        Glide.with(context)
 //                .load(item.getBackground())
 //                .into(holder.background);
@@ -65,7 +62,9 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
 
     public String getCategory(int i) { return data.get(i).getName(); }
 
-    public void addDataItem(CategoryDataItem dataItem) { this.data.add(dataItem); }
+    public void add(Category category) { this.data.add(category); }
+
+    public void add(List<Category> categories) { this.data.addAll(categories); }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public ImageView background;

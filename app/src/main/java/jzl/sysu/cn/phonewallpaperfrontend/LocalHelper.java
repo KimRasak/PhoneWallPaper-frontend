@@ -3,28 +3,44 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.os.Environment;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import jzl.sysu.cn.phonewallpaperfrontend.Adapter.LocalRecyclerViewAdapter;
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.LocalWallpaper;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.LocalWallpaper;
 
 public class LocalHelper {
+    private static final String ROOT_FOLDER = Constants.ROOT_FOLDER;
+    public static final String VERTICAL_FOLDER = ROOT_FOLDER + "/" + "vertical";
 
     private static SharedPreferences getSP(Context context) {
         return context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
     }
 
-    private static File getFile(Context context, String name) {
+    private static File getDir(String path) {
         // 确保图像文件存在于本地
-        File file = new File(context.getFilesDir(), name);
+        File file = new File(Environment.getExternalStorageDirectory(), path);
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            file.mkdir();
+            return file;
+        }
+        return file;
+    }
+
+    private static File getImage(String name) {
+        // 确保图像文件存在于本地
+        File file = new File(Environment.getExternalStorageDirectory(), VERTICAL_FOLDER + "/" + name + ".jpg");
         if (!file.exists()) {
             file.getParentFile().mkdirs();
             try {
@@ -57,28 +73,9 @@ public class LocalHelper {
         }
     }
 
-    public static ArrayList<LocalWallpaper> load(Context context) {
-        SharedPreferences sp = getSP(context);
-        String localWallpaperStr = sp.getString(Constants.LOCAL_WALLPAPER, "[]");
-
-        ArrayList<LocalWallpaper> wallpapers = new ArrayList<>();
-        try {
-            // 添加本地壁纸元素
-            JSONArray localWallpapers = new JSONArray(localWallpaperStr);
-            for (int i = 0; i < localWallpapers.length(); i++) {
-                String rawString = localWallpapers.getString(i);
-                LocalWallpaper wallpaper = LocalWallpaper.fromJSON(rawString);
-                wallpapers.add(wallpaper);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return wallpapers;
-    }
-
-    private static boolean exist(ArrayList<LocalWallpaper> wallpapers, String wallpaperId) {
+    private static boolean exist(ArrayList<LocalWallpaper> wallpapers, Long wallpaperId) {
         for (LocalWallpaper local : wallpapers) {
-            String id = local.getWallpaperId();
+            Long id = local.getWallpaperId();
             if (id.equals(wallpaperId))
                 return true;
         }
@@ -86,33 +83,91 @@ public class LocalHelper {
     }
 
     private static String toJSON(ArrayList<LocalWallpaper> wallpapers) {
-        JSONArray jsonArray = new JSONArray(wallpapers);
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < wallpapers.size(); i++) {
+            LocalWallpaper wallpaper = wallpapers.get(i);
+            try {
+                JSONObject ob = new JSONObject();
+                ob.put("imgSrc", wallpaper.getImgSrc());
+                ob.put("wallpaperId", wallpaper.getWallpaperId());
+                jsonArray.put(i, ob);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         return jsonArray.toString();
     }
 
-    public static void save(Context context, Bitmap bmp, String wallpaperId) {
-        SharedPreferences sp = getSP(context);
+    public static ArrayList<LocalWallpaper> load(String folderPath) {
+        Log.i("localHelper", folderPath);
+        File folder = getDir(folderPath);
+        ArrayList<LocalWallpaper> res = new ArrayList<>();
 
-        // 确保文件存在。
-        File file = getFile(context, wallpaperId);
+        // 找到所有.jpg, .jpeg结尾的文件。
+        File[] images = folder.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith("jpg") || name.endsWith("jpeg");
+            }
+        });
+
+        // 分析文件名，得到id。
+        ArrayList<Long> ids = new ArrayList<>();
+        for (File image : images) {
+            String name = image.getName();
+            if (name.lastIndexOf(".") > 0)
+                name = name.substring(0, name.lastIndexOf("."));
+            Long id;
+            try {
+                id = Long.valueOf(name);
+
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                id = -1L;
+            }
+            ids.add(id);
+        }
+
+        // 添加返回结果。
+        int wallpaperNum = images.length;
+        for (int i = 0; i < wallpaperNum; i++) {
+            String src = images[i].getPath();
+            Long id = ids.get(i);
+
+            LocalWallpaper localWallpaper = new LocalWallpaper(src, id);
+            res.add(localWallpaper);
+        }
+
+        return res;
+    }
+
+    public static void save(Context context, Bitmap bmp, Long wallpaperId) {;
+        // 确保图像文件存在。
+        File file = getImage(String.valueOf(wallpaperId));
         if (file == null)
             return;
 
         // 输出图片到文件。
         String path = output(bmp, file);
-        if (path == null)
-            return;
+        Log.i("helper save", path);
+    }
 
+    public static void remove(String folderPath, Long wallpaperId) {
         // 取得对象，添加元素
-        LocalWallpaper wallpaper = new LocalWallpaper(path, wallpaperId);
-        ArrayList<LocalWallpaper> wallpapers = load(context);
-        if (exist(wallpapers, wallpaperId))
-            return;
-        wallpapers.add(wallpaper);
+        File folder = getDir(folderPath);
+        ArrayList<LocalWallpaper> res = new ArrayList<>();
 
-        // 序列化，写回shared preferences
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString(Constants.LOCAL_WALLPAPER, toJSON(wallpapers));
-        editor.apply();
+        // 找到所有.jpg, .jpeg结尾的文件。
+        final String targetJPG= String.valueOf(wallpaperId) + ".jpg";
+        final String targetJPEG = String.valueOf(wallpaperId) + ".jpeg";
+        File[] images = folder.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.equals(targetJPG) || name.equals(targetJPEG);
+            }
+        });
+        if (images.length > 0)
+            images[0].delete();
+
     }
 }

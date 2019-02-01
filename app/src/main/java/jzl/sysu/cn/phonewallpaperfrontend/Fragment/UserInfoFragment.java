@@ -1,8 +1,10 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Fragment;
 
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.UserConfigActivity;
@@ -86,14 +86,12 @@ public class UserInfoFragment extends Fragment {
     }
 
     private void findView(View view) {
-        userIcon = view.findViewById(R.id.user_icon);
+        userIcon = view.findViewById(R.id.iv_user_icon);
         tvUserName = view.findViewById(R.id.user_name);
         tvSignature = view.findViewById(R.id.user_signature);
     }
 
     private void loadUserIcon(String userIconSrc) {
-        RequestOptions options = new RequestOptions()
-                .placeholder(R.drawable.ic_launcher_background);
-        Glide.with(this).load(userIconSrc).apply(options).into(userIcon);
+        Glide.with(this).load(userIconSrc).into(userIcon);
     }
 }

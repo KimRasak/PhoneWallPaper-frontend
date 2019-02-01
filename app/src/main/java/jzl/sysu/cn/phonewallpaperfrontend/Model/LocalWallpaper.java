@@ -1,13 +1,15 @@
-package jzl.sysu.cn.phonewallpaperfrontend.DataItem;
+package jzl.sysu.cn.phonewallpaperfrontend.Model;
+
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class LocalWallpaper {
     private String imgSrc;
-    private String wallpaperId;
+    private Long wallpaperId;
 
-    public LocalWallpaper(String imgSrc, String wallpaperId) {
+    public LocalWallpaper(String imgSrc, Long wallpaperId) {
         this.imgSrc = imgSrc;
         this.wallpaperId = wallpaperId;
     }
@@ -20,24 +22,25 @@ public class LocalWallpaper {
         this.imgSrc = imgSrc;
     }
 
-    public String getWallpaperId() {
+    public Long getWallpaperId() {
         return wallpaperId;
     }
 
-    public void setWallpaperId(String wallpaperId) {
+    public void setWallpaperId(Long wallpaperId) {
         this.wallpaperId = wallpaperId;
     }
 
     public static LocalWallpaper fromJSON(String json) {
+        Log.i("helper load", json);
         try {
             JSONObject object = new JSONObject(json);
             String imgSrc = object.getString("imgSrc");
-            String wallpaperId = object.getString("wallpaperId");
+            Long wallpaperId = object.getLong("wallpaperId");
 
             return new LocalWallpaper(imgSrc, wallpaperId);
         } catch (JSONException e) {
             e.printStackTrace();
-            return new LocalWallpaper("", "");
+            return null;
         }
     }
 }

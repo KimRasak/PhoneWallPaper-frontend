@@ -3,9 +3,14 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="white">#fffeff</color>
+    <color name="white">#FFFFFF</color>
     <color name="gray">#e2e2db</color>
     <color name="red">#f21a12</color>
     <color name="userNameBlack">#151514</color>
-    <color name="userConfigGray">#efd9d9</color>
+    <color name="black">#131212</color>
+    <color name="bnbActive">#000000</color>
+    <color name="bnbInactive">#FA8E84</color>
+    <color name="bnbBackground">#e2e2db</color>
+    <color name="localWallpaperBackground">#ffffff</color>
+    <color name="userConfigGray">#FFFFFF</color>
 </resources>

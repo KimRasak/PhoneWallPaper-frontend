@@ -18,7 +18,7 @@ public class WallpaperListActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
     private ArrayList<Fragment> fragments = new ArrayList<>();
-    private String[] sortMethods = new String[]{"rank", "new"};
+    private String[] sortMethods = new String[]{"hot", "id"};
     private String[] titles = new String[]{"热门","最新"};
 
     @Override

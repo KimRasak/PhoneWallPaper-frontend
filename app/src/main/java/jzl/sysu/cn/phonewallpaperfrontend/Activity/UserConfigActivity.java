@@ -39,9 +39,20 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.SignatureBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.UserNameBody;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.CodeResponse;
+import jzl.sysu.cn.phonewallpaperfrontend.Util;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -85,7 +96,7 @@ public class UserConfigActivity extends AppCompatActivity {
         String userIconSrc = getIntent().getStringExtra("userIconSrc");
         Glide.with(this).load(userIconSrc).into(userIcon);
 
-        final LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
+        final LoginHelper helper = LoginHelper.getInstance();
 
         btn_logout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -129,16 +140,10 @@ public class UserConfigActivity extends AppCompatActivity {
     }
 
     private void logOut() {
-        LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
+        LoginHelper helper = LoginHelper.getInstance();
         helper.logOut(UserConfigActivity.this);
         setResult(0);
         finish();
-    }
-
-    private void threadShow(String msg) {
-        Looper.prepare();
-        Toast.makeText(UserConfigActivity.this, msg, Toast.LENGTH_SHORT).show();
-        Looper.loop();
     }
 
     private void showPopWindow(){
@@ -270,7 +275,6 @@ public class UserConfigActivity extends AppCompatActivity {
 
     private void loadCameraImage(Intent data) {
         byte[] imageBytes = File2byte(photoUri);
-
     }
 
     private void loadAlbumImage() {
@@ -281,129 +285,65 @@ public class UserConfigActivity extends AppCompatActivity {
     // 提交修改请求
     private void commmitNewUserName(final String userName) {
         // 构建请求
-        String url = CHANGE_USER_NAME_URL;
-        RequestBody body = createUserNameRequestBody(userName);
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Request request = new Request.Builder().url(url).post(body).build();
+        // 构建请求
+        UserService service = ApiManager.getInstance().getUserService();
+        UserNameBody body = new UserNameBody(userName);
+        Observable<CodeResponse> ob = service.changeUserName(body);
+        ob.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<CodeResponse>() {
+                @Override
+                public void onComplete() {}
+                @Override
+                public void onSubscribe(Disposable d) {}
 
-        // 接收壁纸信息的回调函数。
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                threadShow("修改用户名失败，连接错误");
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.body() != null) {
-                    String responseString = response.body().string();
-
-                    try {
-                        JSONObject responseData = new JSONObject(responseString);
-                        int code = responseData.getInt("code");
-                        String message = responseData.getString("message");
-
-                        if (code == 0) {
-                            LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-                            helper.setUserName(userName);
-                            threadShow("修改用户名完成");
-                        }
-                    } catch (JSONException e) {
-                        threadShow("修改用户名失败");
-                        e.printStackTrace();
+                private void fail() { Toast.makeText(UserConfigActivity.this, "修改个人昵称失败", Toast.LENGTH_SHORT).show(); }
+                @Override
+                public void onNext(CodeResponse codeResponse) {
+                    if (codeResponse.isFail()) {
+                        fail();
+                        return;
                     }
 
-
+                    LoginHelper helper = LoginHelper.getInstance();
+                    helper.setUserName(userName);
+                    Toast.makeText(UserConfigActivity.this, "修改用户名完成", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
 
-    }
+                @Override
+                public void onError(Throwable e) { fail(); }
 
-    // 构建RequestBody
-    private RequestBody createUserNameRequestBody(String userName) {
-        JSONObject requestData = new JSONObject();
-
-        // 获取授权信息
-        LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-        String openId = helper.getOpenId();
-        String accessToken = helper.getAccessToken();
-        String auth = helper.getAuth();
-
-        try {
-            requestData.put("openId", openId);
-            requestData.put("accessToken", accessToken);
-            requestData.put("auth", auth);
-
-            requestData.put("userName", userName);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-
-        // 设置RequestBody。格式为application/json
-        return RequestBody.create(FORM_CONTENT_TYPE, requestData.toString());
+            });
     }
 
     private void commitNewSignature(final String signature) {
         // 构建请求
-        String url = CHANGE_SIGNATURE_URL;
-        RequestBody body = createSignatureRequestBody(signature);
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Request request = new Request.Builder().url(url).post(body).build();
-
-        // 接收壁纸信息的回调函数。
-        okHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                threadShow("修改用户名失败，连接错误");
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.body() != null)
-                    return;
-
-                String responseString = response.body().string();
-                try {
-                    JSONObject responseData = new JSONObject(responseString);
-                    int code = responseData.getInt("code");
-                    String message = responseData.getString("message");
-
-                    if (code == 0) {
-                        final LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-                        helper.setSignature(signature);
-                        threadShow("修改用户名完成");
+        UserService service = ApiManager.getInstance().getUserService();
+        SignatureBody body = new SignatureBody(signature);
+        Observable<CodeResponse> ob = service.changeSignature(body);
+        ob.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<CodeResponse>() {
+                @Override
+                public void onSubscribe(Disposable d) {}
+                private void fail() { Toast.makeText(UserConfigActivity.this, "修改签名失败", Toast.LENGTH_SHORT).show(); }
+                @Override
+                public void onNext(CodeResponse codeResponse) {
+                    if (codeResponse.isFail()) {
+                        fail();
+                        return;
                     }
-                    else
-                        threadShow("修改用户名失败");
-                } catch (JSONException e) {
-                    threadShow("修改用户名失败");
-                    e.printStackTrace();
+
+                    final LoginHelper helper = LoginHelper.getInstance();
+                    helper.setSignature(signature);
+                    Toast.makeText(UserConfigActivity.this, "修改签名完成", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-    }
-    private RequestBody createSignatureRequestBody(String signature) {
-        JSONObject requestData = new JSONObject();
 
-        // 获取授权信息
-        LoginHelper helper = LoginHelper.getInstance(getApplicationContext());
-        String openId = helper.getOpenId();
-        String accessToken = helper.getAccessToken();
-        String auth = helper.getAuth();
+                @Override
+                public void onError(Throwable e) { fail(); }
 
-        try {
-            requestData.put("openId", openId);
-            requestData.put("accessToken", accessToken);
-            requestData.put("auth", auth);
-            requestData.put("signature", signature);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        // 设置RequestBody。格式为application/json
-        return RequestBody.create(FORM_CONTENT_TYPE, requestData.toString());
-
+                @Override
+                public void onComplete() {}
+            });
     }
 }

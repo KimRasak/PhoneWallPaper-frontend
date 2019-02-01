@@ -3,10 +3,7 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
@@ -15,16 +12,16 @@ import com.tencent.tauth.UiError;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.MainActivity;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.LoginBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.LoginResponse;
 
 public class LoginHelper {
     /*
@@ -54,11 +51,7 @@ public class LoginHelper {
     private String auth;
     public final static String AUTH_QQ = "qq";
 
-
-
-    public static LoginHelper getInstance(Context applicationContext) {
-        APP_ID = applicationContext.getString(R.string.APP_ID);
-        tencent = Tencent.createInstance(APP_ID, applicationContext);
+    public static LoginHelper getInstance() {
         return instance;
     }
 
@@ -67,17 +60,20 @@ public class LoginHelper {
     }
 
     /* 初始化相关 */
-    public void init(MainActivity activity) {
+    public boolean init(Activity activity) {
         // APP开启时调用。
         // 初始化tencent用户信息（如果有session则载入）
 
         // APP启动时调用，检查tencent接口的session是否合法，
         // 若合法则读取，若已过期/不合法则不读取。
-        loadQQSessionIfValid();
-        if (!isQQLocalLoggedIn(activity))
-            return;
-        ServerLoginListener listener = new ServerLoginListener(activity);
-        listener.loginServer(getOpenId(), getAccessToken(), getExpiresTime(), AUTH_QQ);
+        APP_ID = activity.getString(R.string.APP_ID);
+        tencent = Tencent.createInstance(APP_ID, activity.getApplicationContext());
+
+        if (loadQQSessionIfValid() && isQQLocalLoggedIn(activity)) {
+            setAuth(AUTH_QQ);
+            return true;
+        } else
+            return false;
     }
 
     public void logOut(Activity activity) {
@@ -110,7 +106,7 @@ public class LoginHelper {
     /* QQ相关的登录接口 */
     public Tencent getTencent() { return tencent; }
 
-    public void logInQQ(MainActivity activity, QQLoginListener listener) {
+    public void logInQQ(Activity activity, QQLoginListener listener) {
         if (listener == null)
             listener = new QQLoginListener(activity);
         String SCOPE_QQ = "get_simple_userinfo";
@@ -134,12 +130,14 @@ public class LoginHelper {
         JSONObject session = tencent.loadSession(APP_ID);
         tencent.initSessionCache(session);
     }
-    private void loadQQSessionIfValid() {
+    private boolean loadQQSessionIfValid() {
         boolean isSessionValid = tencent.checkSessionValid(APP_ID);
         if (isSessionValid) {
             JSONObject session = tencent.loadSession(APP_ID);
             tencent.initSessionCache(session);
+            return true;
         }
+        return false;
     }
 
     // QQ本地登陆状态
@@ -156,7 +154,7 @@ public class LoginHelper {
     }
 
     // 判断是否QQ已完成第三方登录。
-    private boolean isQQLoggedIn(Activity activity) {
+    public boolean isQQLoggedIn(Activity activity) {
         // 判断已登陆的条件有三个：本地保存的session有效、本地存储的登陆状态为“是”、session已经加载。
         return isQQSessionValid() && isQQLocalLoggedIn(activity) && isQQSessionLoaded();
     }
@@ -179,7 +177,7 @@ public class LoginHelper {
     public Long getUserId() { return userId; }
 
     private long getExpiredIn() { return tencent.getExpiresIn(); }
-    private long getExpiresTime() { return System.currentTimeMillis() / 1000 + getExpiredIn(); }
+    public long getExpiresTime() { return System.currentTimeMillis() / 1000 + getExpiredIn(); } // 默认过期时间总是大于当前时间。
 
     /* 用户个人信息 */
     public String getUserIcon() { return userIcon; }
@@ -189,35 +187,8 @@ public class LoginHelper {
     public String getSignature() { return signature; }
     public void setSignature(String signature) { this.signature = signature; }
 
-    /* auth的访问函数，和本地存储的访问函数 */
-    //    private void setAuth(String auth, Activity activity) {
-//        this.auth = auth;
-//        setLocalAuth(activity, auth);
-//    }
-//    public String getAuth(Activity activity) {
-//        if (auth == null)
-//            auth = getLocalAuth(activity);
-//        return auth;
-//    }
-//    private void setLocalAuth(Activity activity, String auth) {
-//        SharedPreferences sp = activity.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
-//        SharedPreferences.Editor edit= sp.edit();
-//        if (auth != null)
-//            edit.putString(AUTH, auth);
-//        else
-//            edit.remove(AUTH);
-//        edit.apply();
-//    }
-//    private String getLocalAuth(Activity activity) {
-//        SharedPreferences sp = activity.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
-//        if (sp.contains(AUTH))
-//            return sp.getString(AUTH, AUTH_QQ);
-//        else
-//            return null;
-//    }
-
     public class QQLoginListener extends ServerLoginListener {
-        public QQLoginListener(MainActivity activity) {
+        public QQLoginListener(Activity activity) {
             super(activity);
         }
 
@@ -246,10 +217,9 @@ public class LoginHelper {
     }
 
     public class ServerLoginListener implements IUiListener {
-        private String LOGIN_URL = "http://" + jzl.sysu.cn.phonewallpaperfrontend.Constants.PC_IP + ":9090/user/login";
-        protected MainActivity activity;
+        protected Activity activity;
 
-        ServerLoginListener(MainActivity activity) {
+        public ServerLoginListener(Activity activity) {
             this.activity = activity;
         }
         @Override
@@ -266,68 +236,42 @@ public class LoginHelper {
         @Override
         public void onCancel() {}
 
+        public void onServerLoggedIn() {}
+
         // 到服务器后台登陆
         public void loginServer(final String openid, final String accessToken, long expiresTime, final String auth) {
-            String url = LOGIN_URL;
-            RequestBody requestBody = createLoginServerRequestBody(openid, accessToken, expiresTime, auth);
-            Request request = new Request.Builder().url(url).post(requestBody).build();
-            OkHttpClient okHttpClient = new OkHttpClient();
-
-            // 接收壁纸信息的回调函数。
-            okHttpClient.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    Looper.prepare();
-                    Toast.makeText(activity, "登陆失败", Toast.LENGTH_SHORT).show();
-                    Looper.loop();
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    ResponseBody responseBody = response.body();
-                    if (responseBody == null)
-                        return;
-                    try {
-                        JSONObject responseJsonObject = new JSONObject(responseBody.string());
-                        int code = responseJsonObject.getInt("code");
-                        Long userId = responseJsonObject.getLong("userId");
-                        String userName = responseJsonObject.getString("nickname");
-                        String signature = responseJsonObject.getString("signature");
-                        String userIcon = responseJsonObject.getString("iconPath");
-
-                        if (code == 0) {
-                            setAuth(auth);
-                            // 服务器登录成功
-                            setUserId(userId);
-
-                            // 设置用户个人信息
-                            setUserName(userName);
-                            setSignature(signature);
-                            setUserIcon(userIcon);
-
-                            // 切换用户信息页面
-                            activity.getUserPgae().changeUserFragment(true);
+            UserService service = ApiManager.getInstance().getUserService();
+            LoginBody body = new LoginBody(openid, accessToken, expiresTime, auth);
+            Observable<LoginResponse> ob = service.login(body);
+            ob.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<LoginResponse>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {}
+                    @Override
+                    public void onComplete() {}
+                    private void fail() { Util.showNetworkFailToast(activity); }
+                    @Override
+                    public void onNext(LoginResponse loginResponse) {
+                        if (loginResponse.isFail()) {
+                            fail();
+                            return;
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+
+                        // 设置用户个人信息
+                        setAuth(loginResponse.getAuth());
+                        setUserId(loginResponse.getUserId());
+                        setUserName(loginResponse.getNickname());
+                        setSignature(loginResponse.getSignature());
+                        setUserIcon(loginResponse.getIconPath());
+
+                        onServerLoggedIn();
+                        // 切换用户信息页面
+                        // activity.getUserPgae().changeUserFragment(true);
                     }
-                }
-            });
-        }
-
-        RequestBody createLoginServerRequestBody(String openid, String accessToken, long expiresTime, String auth) {
-            JSONObject requestJsonObject = new JSONObject();
-            try {
-                requestJsonObject.put("openid", openid);
-                requestJsonObject.put("accessToken", accessToken);
-                requestJsonObject.put("expiresTime", expiresTime);
-                requestJsonObject.put("auth", auth);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            // 设置RequestBody。格式为application/json
-            return RequestBody.create(Constants.FORM_CONTENT_TYPE, requestJsonObject.toString());
+                    @Override
+                    public void onError(Throwable e) { fail(); }
+                });
         }
     }
 }

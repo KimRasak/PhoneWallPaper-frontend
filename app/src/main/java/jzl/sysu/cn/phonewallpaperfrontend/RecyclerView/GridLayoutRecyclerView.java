@@ -7,7 +7,7 @@ import android.util.AttributeSet;
 
 public class GridLayoutRecyclerView extends RecyclerView {
     private LayoutManager manager;
-    private int spanCount = 2;
+    private int spanCount = 3;
 
     public GridLayoutRecyclerView(Context context, int spanCount) {
         super(context);

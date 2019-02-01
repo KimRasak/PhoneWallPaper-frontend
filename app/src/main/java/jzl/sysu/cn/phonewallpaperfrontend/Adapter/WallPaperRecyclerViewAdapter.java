@@ -16,25 +16,31 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.MemoryCategory;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.WallPaperDataItem;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.WallPaper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Util;
 
 public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaperRecyclerViewAdapter.ViewHolder> {
     private Context context;
-    private List<WallPaperDataItem> data;
+    private List<WallPaper> data;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
+    private int imgWidth;
 
+    private String hostName;
     private int spanCount;
+    private final double scale;
 
-    public WallPaperRecyclerViewAdapter(Context context, ArrayList<WallPaperDataItem> data, int spanCount) {
+    public WallPaperRecyclerViewAdapter(Context context, ArrayList<WallPaper> data, int spanCount, double scale) {
         this.context = context;
         this.mInflater = LayoutInflater.from(context);
         this.data = data;
         this.spanCount = spanCount;
+        this.scale = scale;
     }
 
     @Override
@@ -45,8 +51,8 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         // 设置图片宽高成比例（1.5:1）
         int margin = 1; // margin是1dp。
         float pxMargin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX, margin * (spanCount + 1), context.getResources().getDisplayMetrics()); // 每行两个图，margin总共有4dp
-        view.getLayoutParams().height =  (int)(((float)parent.getMeasuredWidth() - pxMargin) / spanCount / 1.5); // 图片的宽比高为1.5:1，
-
+        imgWidth = (int)((float)parent.getMeasuredWidth() - pxMargin) / spanCount;
+        view.getLayoutParams().height =  (int)(imgWidth * scale); // 图片的宽比高为1.5:1，
         return new ViewHolder(view);
     }
 
@@ -54,26 +60,19 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         // 获取数据
-        WallPaperDataItem dataItem = data.get(position);
-        // 设置默认图片
-        holder.wallpaper.setImageResource(R.drawable.ic_launcher_foreground);
-
+        WallPaper wallPaper = data.get(position);
+        String path = wallPaper.getPath();
+        String host = hostName;
+        String tail = "x-oss-process=image/resize,w_" + imgWidth;
+        String wallpaperSrc = "https://" + host + "/" + path;
+        String thumb = wallpaperSrc + "?" + tail;
+        holder.wallpaperSrc = wallpaperSrc;
         // 加载相应图片
-        byte[] imgBytes = dataItem.getImgBytes();
         Glide.get(context).setMemoryCategory(MemoryCategory.HIGH);
-        if (imgBytes == null) {
-            // 下载图片
-            Log.i("RepoPgae", "pos: " + position + " download image. Data num:" + data.size() + "---------------");
-            String imgSrc = dataItem.getImgSrc();
-            Glide.with(context)
-                    .load(imgSrc)
-                    .into(holder.wallpaper);
-
-        } else {
-            Log.i("RepoPgae", "pos: " + position +" Decode bitmap image.");
-            Bitmap bitmap = BitmapFactory.decodeByteArray(imgBytes, 0, imgBytes.length);
-            holder.wallpaper.setImageBitmap(bitmap);
-        }
+        Glide.with(context)
+                .load(thumb)
+                .centerCrop()
+                .into(holder.wallpaper);
     }
 
     public static Bitmap scaleBitmap(Bitmap bitmap, int dst_w, int dst_h) {
@@ -83,9 +82,8 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         float scale_h = ((float) dst_h) / src_h;
         Matrix matrix = new Matrix();
         matrix.postScale(scale_w, scale_h);
-        Bitmap dstbmp = Bitmap.createBitmap(bitmap, 0, 0, src_w, src_h, matrix,
+        return Bitmap.createBitmap(bitmap, 0, 0, src_w, src_h, matrix,
                 true);
-        return dstbmp;
     }
 
     @Override
@@ -93,16 +91,27 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         return data.size();
     }
 
-    public WallPaperDataItem getItem(int index) { return data.get(index); }
+    public WallPaper get(int index) { return data.get(index); }
 
-    public void addDataItem(WallPaperDataItem dataItem) {
-        this.data.add(dataItem);
+    public void add(WallPaper wallPaper) { data.add(wallPaper); }
+
+    public void add(List<WallPaper> wallPapers) {
+        data.addAll(wallPapers);
     }
 
+    /* hostName 的 setter和getter */
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
 
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         ImageView wallpaper;
+        String wallpaperSrc;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -112,8 +121,9 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
 
         @Override
         public void onClick(View view) {
-            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition(), this.wallpaperSrc);
         }
+
     }
 
     public void setClickListener(ItemClickListener itemClickListener) {
@@ -122,6 +132,6 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
 
     // 父Activity会实现该接口来监听点击事件。
     public interface ItemClickListener {
-        void onItemClick(View view, int position);
+        void onItemClick(View view, int position, String wallpaperSrc);
     }
 }

@@ -1,12 +1,18 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Page;
 
+import android.app.AlertDialog;
+import android.app.WallpaperManager;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,33 +21,28 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Activity.ViewWallpaperActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.LocalRecyclerViewAdapter;
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView;
-import jzl.sysu.cn.phonewallpaperfrontend.DataItem.LocalWallpaper;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.LocalWallpaper;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
 import jzl.sysu.cn.phonewallpaperfrontend.LocalHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
+import jzl.sysu.cn.phonewallpaperfrontend.Util;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link UserPgae.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link UserPgae#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class UserPgae extends Fragment{
-    private OnFragmentInteractionListener mListener;
+public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemClickListener {
 
     // 本地壁纸栏
     private LinearLayout localLayout; // 有壁纸时显示
     private AutofitRecyclerView rvLocal;
-    private LocalRecyclerViewAdapter localAdapter;
+    private LocalRecyclerViewAdapter localAdapter; // 本地壁纸栏目
     private ConstraintLayout noWallpaperLayout; // 无壁纸时显示
 
     public UserPgae() {
@@ -75,20 +76,19 @@ public class UserPgae extends Fragment{
     public void onResume() {
 
         // 未登录显示登陆界面， 登陆则显示用户界面。
-        Context context = this.getContext().getApplicationContext();
-        LoginHelper helper = LoginHelper.getInstance(context);
+        LoginHelper helper = LoginHelper.getInstance();
 
         // 登陆QQ
         Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
 
         changeUserFragment(helper.isLoggedIn(getActivity()));
-        setLocalLayout();
+        initLocalLayout();
         super.onResume();
     }
 
     public void changeUserFragment(boolean isLoggedIn) {
         if (isLoggedIn) {
-            LoginHelper helper = LoginHelper.getInstance(getActivity());
+            LoginHelper helper = LoginHelper.getInstance();
             Fragment fragment = UserInfoFragment.newInstance(helper.getUserIcon(), helper.getUserName(), helper.getSignature());
             FragmentManager fm = getFragmentManager();
             fm.beginTransaction()
@@ -104,14 +104,16 @@ public class UserPgae extends Fragment{
         }
     }
 
-    public void setLocalLayout() {
+    public void initLocalLayout() {
         // 每行3列图片
         int spanCount = 3;
 
         // 设置Adapter
-        ArrayList<LocalWallpaper> data = LocalHelper.load(getActivity());
-        localAdapter = new LocalRecyclerViewAdapter(getContext(), data, spanCount);
+        ArrayList<LocalWallpaper> data = LocalHelper.load(LocalHelper.VERTICAL_FOLDER);
+        // localAdapter = new LocalRecyclerViewAdapter(getContext(), data, spanCount, Util.getWindowScale(getActivity()));
+        localAdapter = new LocalRecyclerViewAdapter(getContext(), data, spanCount, Constants.WALLPAPER_SCALE);
         rvLocal.setAdapter(localAdapter);
+        localAdapter.setOnItemClickListener(this);
 
         // 设置layout Manager
         GridLayoutManager manager = new GridLayoutManager(getActivity(), spanCount, RecyclerView.VERTICAL, false);
@@ -136,23 +138,45 @@ public class UserPgae extends Fragment{
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
+    public void onItemClick(View view, int position) {
+        LocalWallpaper wallpaper = localAdapter.get(position);
+        String path = wallpaper.getImgSrc();
+        final Bitmap bitmap = BitmapFactory.decodeFile(path);
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(getActivity());
+        normalDialog.setTitle("是否设置为壁纸？")
+                .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        DisplayMetrics metrics = Util.setWallpaperManagerFitScreen(getActivity());
+                        // Bitmap containScreen = Util.scaleBitmapToContainScreen(bitmap, metrics);
+                        Bitmap wallpaper = Util.centerCrop(bitmap, metrics);
+                        // Bitmap wallpaper = Bitmap.createScaledBitmap(bitmap, metrics.widthPixels, metrics.heightPixels, true);
+                        final WallpaperManager wallpaperManager = WallpaperManager.getInstance(getActivity());
+                        try {
+                            wallpaperManager.setBitmap(wallpaper);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).setNegativeButton("否", null);
+        normalDialog.show();
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
+    public void onItemLongClick(View view, final int position) {
+        final Long wallpaperId = localAdapter.get(position).getWallpaperId();
 
-    public interface OnFragmentInteractionListener {
-        void onFragmentInteraction(JSONObject jsonObject);
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(getActivity());
+        normalDialog.setTitle("是否删除该壁纸？")
+                .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        LocalHelper.remove(LocalHelper.VERTICAL_FOLDER, wallpaperId);
+                        localAdapter.remove(position);
+                        localAdapter.notifyDataSetChanged();
+                    }
+                }).setNegativeButton("否", null);
+        normalDialog.show();
+
     }
 }
