@@ -79,7 +79,7 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
         LoginHelper helper = LoginHelper.getInstance();
 
         // 登陆QQ
-        Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
+        // Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
 
         changeUserFragment(helper.isLoggedIn(getActivity()));
         initLocalLayout();

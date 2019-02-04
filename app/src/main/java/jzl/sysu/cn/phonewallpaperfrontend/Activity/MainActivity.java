@@ -1,27 +1,19 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.support.v4.app.Fragment;
 
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
 import com.ashokvarma.bottomnavigation.BottomNavigationItem;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.tencent.connect.common.Constants;
-import com.tencent.tauth.Tencent;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
-import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.Page.RecommendationPgae;
 import jzl.sysu.cn.phonewallpaperfrontend.Page.RepoPgae;
