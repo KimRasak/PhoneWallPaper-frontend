@@ -34,6 +34,7 @@ import jzl.sysu.cn.phonewallpaperfrontend.Model.Comment;
 import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.GridLayoutRecyclerView;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.WallpaperListActivity;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.CategoryResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -66,18 +67,19 @@ public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.It
 
     private void loadCategories() {
         CategoryService service = ApiManager.getInstance().getCategoryService();
-        Observable<List<Category>> ob = service.getCategoryList();
+        Observable<CategoryResponse> ob = service.getCategoryList();
         ob.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<Category>>() {
+                .subscribe(new Observer<CategoryResponse>() {
                     @Override
                     public void onSubscribe(Disposable d) {}
                     @Override
                     public void onComplete() {}
 
                     @Override
-                    public void onNext(List<Category> categories) {
-                        rvAdapter.add(categories);
+                    public void onNext(CategoryResponse res) {
+                        rvAdapter.setHostName(res.getHostName());
+                        rvAdapter.add(res.getCategories());
                         rvAdapter.notifyDataSetChanged();
                     }
 

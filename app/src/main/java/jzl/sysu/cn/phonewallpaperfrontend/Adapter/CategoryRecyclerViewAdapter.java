@@ -11,14 +11,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.Model.Category;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 
 public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRecyclerViewAdapter.ViewHolder> {
     private Context context;
+    private String hostName;
     private List<Category> data;
     private LayoutInflater mInflater;
     private int spanCount = 2;
@@ -49,16 +53,19 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
 
         // 绑定视图。
         holder.name.setText(item.getName());
-        holder.background.setImageResource(R.drawable.ic_launcher_foreground);
-//        Glide.with(context)
-//                .load(item.getBackground())
-//                .into(holder.background);
+        String background = "http://" + hostName + "/" + item.getBackground();
+        Log.i("categoryRV", background);
+        Glide.with(context)
+                .load(background)
+                .into(holder.background);
     }
 
     @Override
     public int getItemCount() {
         return data.size();
     }
+
+    public void setHostName(String hostName) { this.hostName = hostName;}
 
     public String getCategory(int i) { return data.get(i).getName(); }
 

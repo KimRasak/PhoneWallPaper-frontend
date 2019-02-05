@@ -145,7 +145,7 @@ public class LoginHelper {
         SharedPreferences sp = activity.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit= sp.edit();
         edit.putBoolean(IS_QQ_LOGGED, isLogged);
-        edit.apply();
+        edit.commit();
     }
     private boolean isQQLocalLoggedIn(Activity activity) {
         // 返回是否已用QQ第三方登陆

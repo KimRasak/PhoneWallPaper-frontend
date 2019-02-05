@@ -142,8 +142,7 @@ public class UserConfigActivity extends AppCompatActivity {
     private void logOut() {
         LoginHelper helper = LoginHelper.getInstance();
         helper.logOut(UserConfigActivity.this);
-        setResult(0);
-        finish();
+        System.exit(0);
     }
 
     private void showPopWindow(){
