@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 高度 -->
+    <dimen name="bottom_navigation_height">32dp</dimen>
+    <dimen name="bottom_navigation_padded_height">32dp</dimen>
+
+    <!-- 顶部padding -->
+    <dimen name="fixed_height_top_padding_inactive">1dp
+    </dimen><!-- 8(Top Padding) - 12/2(extra padding due to badges) = 2 -->
+    <dimen name="fixed_height_top_padding_active">2dp
+    </dimen><!-- 6(Top Padding) - 12/2(extra padding due to badges) = 0 -->
+
+    <!-- 底部padding -->
+    <dimen name="fixed_height_bottom_padding">26dp</dimen>
+
+    <!-- 图标 -->
+    <dimen name="fixed_icon_grid">18dp</dimen>
+    <dimen name="fixed_icon_badge_grid_height">18dp
+    </dimen><!-- this adds 6 dp extra to top and bottom icon -->
+    <dimen name="fixed_icon_badge_grid_width">18dp
+    </dimen><!-- this adds 6 dp extra to top and bottom icon -->
+
+    <!-- 标题 -->
+    <dimen name="fixed_label_active">10sp</dimen>
+    <dimen name="fixed_label_inactive">10sp</dimen>
+    <dimen name="shifting_label">10sp</dimen>
+    <item name="fixed_label_active_to_inactive_ratio" format="float" type="dimen">1</item>
+</resources>
