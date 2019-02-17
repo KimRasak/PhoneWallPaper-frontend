@@ -1,6 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Body;
 
-public class SignatureBody extends AuthBody{
+public class SignatureBody {
     private String signature;
 
     public SignatureBody(String signature) {

@@ -77,14 +77,6 @@ public class UserConfigActivity extends AppCompatActivity {
     EditText etSignature;
     TextView tvChangeSignature;
 
-    String CHANGE_USER_ICON_URL = "http://" + Constants.PC_IP + ":9090/user/userIcon";
-    String CHANGE_USER_NAME_URL = "http://" + Constants.PC_IP + ":9090/user/userName";
-    String CHANGE_SIGNATURE_URL = "http://" + Constants.PC_IP + ":9090/user/signature";
-
-
-    public static final MediaType FORM_CONTENT_TYPE
-            = MediaType.parse("application/json; charset=utf-8");
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -142,7 +134,6 @@ public class UserConfigActivity extends AppCompatActivity {
     private void logOut() {
         LoginHelper helper = LoginHelper.getInstance();
         helper.logOut(UserConfigActivity.this);
-        System.exit(0);
     }
 
     private void showPopWindow(){

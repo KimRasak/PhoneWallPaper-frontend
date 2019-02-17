@@ -55,4 +55,5 @@ public class LoginResponse extends CodeResponse{
     public void setVip(boolean vip) {
         this.vip = vip;
     }
+
 }

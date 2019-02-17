@@ -98,7 +98,7 @@ public class WallPaperListContentFragment extends Fragment implements WallPaperR
         rv_wallpapers.setAdapter(adapter);
 
         // 设置上拉刷新的listener
-        WallPaperListContentFragment.LoadWallpaperListener loadWallpaperListener = new WallPaperListContentFragment.LoadWallpaperListener();
+        LoadWallpaperListener loadWallpaperListener = new LoadWallpaperListener();
         wallpaper_swipe_layout.setOnLoadMoreListener(loadWallpaperListener);
 
         // 仅当用newInstance调入该Fragment时，category才会被赋值。xml的<fragment>标签会自动创造一次该fragment。

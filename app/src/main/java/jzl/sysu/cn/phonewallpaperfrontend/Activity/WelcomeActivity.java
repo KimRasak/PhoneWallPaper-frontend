@@ -1,8 +1,11 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -10,15 +13,30 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
-import jzl.sysu.cn.phonewallpaperfrontend.LoginActivity;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
+import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.LoginResponse;
 
 public class WelcomeActivity extends AppCompatActivity {
     private String[] permissions = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE };
@@ -43,8 +61,13 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     private void initAndLeave() {
+        initApiManager();
         initImageLoader();
         initLoginHelper();
+    }
+
+    private void initApiManager() {
+        ApiManager.getInstance().init(this.getApplicationContext());
     }
 
     private void initImageLoader() {
@@ -54,23 +77,55 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     private void initLoginHelper() {
-        LoginHelper helper = LoginHelper.getInstance();
+        final LoginHelper helper = LoginHelper.getInstance();
         helper.init(this);
-        if (helper.isQQLoggedIn(this)) {
-            LoginHelper.ServerLoginListener listener = helper.new ServerLoginListener(this) {
-                @Override
-                public void onServerLoggedIn() {
-                    Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
-            };
-            listener.loginServer(helper.getOpenId(), helper.getAccessToken(), helper.getExpiresTime(), helper.getAuth());
-        } else {
-            Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
-        }
+
+        UserService service = ApiManager.getInstance().getUserService();
+        service.checkLogin()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<LoginResponse>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    private void fail() {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }, 300);
+                    }
+
+                    @Override
+                    public void onNext(LoginResponse loginResponse) {
+                        if (loginResponse.isFail()) {
+                            fail();
+                            return;
+                        }
+
+                        Log.i("OkHttp", "begin onServerLoggedIn. userId: " + loginResponse.getUserId());
+                        // 设置用户个人信息
+                        helper.setUserInfo(loginResponse);
+
+                        Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("OkHttp", e.getMessage());
+                        fail();
+                    }
+
+                    @Override
+                    public void onComplete() {}
+                });
     }
 
     private void startRequestPermission() {

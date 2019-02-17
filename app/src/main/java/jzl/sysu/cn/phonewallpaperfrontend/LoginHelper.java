@@ -2,12 +2,15 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
+
+import com.tencent.mm.opensdk.openapi.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,7 +24,11 @@ import jzl.sysu.cn.phonewallpaperfrontend.Activity.MainActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
 import jzl.sysu.cn.phonewallpaperfrontend.Body.LoginBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Body.LoginQQBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Response.CodeResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.LoginResponse;
+
+import static jzl.sysu.cn.phonewallpaperfrontend.Constants.LOGIN_HELPER;
 
 public class LoginHelper {
     /*
@@ -32,15 +39,14 @@ public class LoginHelper {
     * */
     private static final LoginHelper instance = new LoginHelper();
 
-    private static String APP_ID;
+    private static String QQ_APP_ID;
+    private static String WX_APP_ID;
 
-    /*  shared preference */
-    // shared preference文件名
-    private final String SHARE_PREFERENCE_NAME = "login_helper";
     // shared preference属性名
     private final String IS_QQ_LOGGED = "is_qq_logged"; // shared preference 属性
 
     private static Tencent tencent;
+    private IWXAPI wxApi; // IWXAPI 是第三方app和微信通信的openApi接口
 
     /* 用户个人信息 */
     private Long userId;
@@ -66,8 +72,13 @@ public class LoginHelper {
 
         // APP启动时调用，检查tencent接口的session是否合法，
         // 若合法则读取，若已过期/不合法则不读取。
-        APP_ID = activity.getString(R.string.APP_ID);
-        tencent = Tencent.createInstance(APP_ID, activity.getApplicationContext());
+        QQ_APP_ID = activity.getString(R.string.QQ_APP_ID);
+        WX_APP_ID = activity.getString(R.string.WX_APP_ID);
+        tencent = Tencent.createInstance(QQ_APP_ID, activity.getApplicationContext());
+        // 通过WXAPIFactory工厂，获取IWXAPI的实例
+        wxApi = WXAPIFactory.createWXAPI(activity, WX_APP_ID, true);
+        wxApi.registerApp(WX_APP_ID);
+
 
         if (loadQQSessionIfValid() && isQQLocalLoggedIn(activity)) {
             setAuth(AUTH_QQ);
@@ -84,22 +95,46 @@ public class LoginHelper {
             logOutQQ(activity);
         }
 
-        logOutServer();
+        logOutServer(activity);
     }
     public boolean isLoggedIn(Activity activity) {
-        Log.i("user page", isQQLoggedIn(activity) + " " + isServerLoggedIn());
-        return isQQLoggedIn(activity) && isServerLoggedIn();
+        return isServerLoggedIn();
     }
 
-    private void setAuth(String auth) { this.auth = auth; }
+    public void setAuth(String auth) { this.auth = auth; }
     public String getAuth() { return auth; }
 
     /* 服务器相关登录接口 */
     private boolean isServerLoggedIn() {
         return userId != null;
     }
-    private void logOutServer() {
+    private void logOutServer(final Context context) {
         // 清空userId。
+        UserService service = ApiManager.getInstance().getUserService();
+        Observable<CodeResponse> ob = service.logout();
+        ob.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<CodeResponse>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {}
+
+                    @Override
+                    public void onNext(CodeResponse codeResponse) {
+                        if (codeResponse.isFail()) {
+                            Log.v("LoginHelper", "logout fail");
+                            return;
+                        }
+                        ApiManager.clearCookies(context);
+                        Log.v("LoginHelper", "logout success.");
+                        System.exit(0);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {}
+
+                    @Override
+                    public void onComplete() {}
+                });
         this.userId = null;
     }
 
@@ -120,20 +155,20 @@ public class LoginHelper {
     // QQ session。
     private boolean isQQSessionValid() {
         // 检测QQ session的合法性、是否过期。
-        return tencent.checkSessionValid(APP_ID);
+        return tencent.checkSessionValid(QQ_APP_ID);
     }
     private boolean isQQSessionLoaded() {
         // 若tencent缓存了token，则已加载session。
         return tencent.getQQToken() != null;
     }
     private void loadQQSession() {
-        JSONObject session = tencent.loadSession(APP_ID);
+        JSONObject session = tencent.loadSession(QQ_APP_ID);
         tencent.initSessionCache(session);
     }
     private boolean loadQQSessionIfValid() {
-        boolean isSessionValid = tencent.checkSessionValid(APP_ID);
+        boolean isSessionValid = tencent.checkSessionValid(QQ_APP_ID);
         if (isSessionValid) {
-            JSONObject session = tencent.loadSession(APP_ID);
+            JSONObject session = tencent.loadSession(QQ_APP_ID);
             tencent.initSessionCache(session);
             return true;
         }
@@ -142,21 +177,20 @@ public class LoginHelper {
 
     // QQ本地登陆状态
     private void setQQLocalLoggedIn(Activity activity, boolean isLogged) {
-        SharedPreferences sp = activity.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sp = activity.getSharedPreferences(LOGIN_HELPER, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit= sp.edit();
         edit.putBoolean(IS_QQ_LOGGED, isLogged);
         edit.commit();
     }
     private boolean isQQLocalLoggedIn(Activity activity) {
         // 返回是否已用QQ第三方登陆
-        SharedPreferences sp = activity.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sp = activity.getSharedPreferences(LOGIN_HELPER, Context.MODE_PRIVATE);
         return sp.getBoolean(IS_QQ_LOGGED, false);
     }
 
     // 判断是否QQ已完成第三方登录。
     public boolean isQQLoggedIn(Activity activity) {
-        // 判断已登陆的条件有三个：本地保存的session有效、本地存储的登陆状态为“是”、session已经加载。
-        return isQQSessionValid() && isQQLocalLoggedIn(activity) && isQQSessionLoaded();
+        return userId == null && auth.equals(AUTH_QQ);
     }
 
     // 设置QQ第三方登录信息
@@ -167,13 +201,16 @@ public class LoginHelper {
         tencent.setAccessToken(accessToken, expiresIn);
     }
 
+    /* 微信相关的登录接口 */
+    public IWXAPI getWX() { return this.wxApi; }
+
     /* 用户openid、accessToken信息 */
     // 私有属性的getter和setter
     public String getOpenId() { return tencent.getOpenId(); }
     public String getAccessToken() { return tencent.getAccessToken(); }
 
     // userId
-    private void setUserId(Long userId) { this.userId = userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     public Long getUserId() { return userId; }
 
     private long getExpiredIn() { return tencent.getExpiresIn(); }
@@ -187,9 +224,29 @@ public class LoginHelper {
     public String getSignature() { return signature; }
     public void setSignature(String signature) { this.signature = signature; }
 
-    public class QQLoginListener extends ServerLoginListener {
+    public void setUserInfo(LoginResponse res) {
+        setAuth(res.getAuth());
+        setUserId(res.getUserId());
+        setUserName(res.getNickname());
+        setSignature(res.getSignature());
+        setUserIcon(res.getIconPath());
+    }
+
+    public class QQLoginListener implements IUiListener {
+        protected Activity activity;
+
         public QQLoginListener(Activity activity) {
-            super(activity);
+            this.activity = activity;
+        }
+        @Override
+        public void onError(UiError uiError) {}
+        @Override
+        public void onCancel() {}
+
+        @Override
+        public void onComplete(Object o) {
+            JSONObject response = (JSONObject)o;
+            doComplete(response);
         }
 
         public void doComplete(JSONObject values) {
@@ -198,7 +255,7 @@ public class LoginHelper {
                 Log.i("logInfo", "values: " + values.toString());
                 String accessToken = values.getString("access_token");
                 String openid = values.getString("openid");
-                long expiresIn = values.getLong("expires_in"); // 90天
+                long expiresIn = values.getLong("expires_in"); // qq默认为90天
                 long expiresTime = values.getLong("expires_time"); // 90天后的时间
 
                 // 登陆成功
@@ -214,64 +271,37 @@ public class LoginHelper {
                 e.printStackTrace();
             }
         }
-    }
-
-    public class ServerLoginListener implements IUiListener {
-        protected Activity activity;
-
-        public ServerLoginListener(Activity activity) {
-            this.activity = activity;
-        }
-        @Override
-        public void onComplete(Object o) {
-            JSONObject response = (JSONObject)o;
-            doComplete(response);
-        }
-
-        // 可以登陆QQ。
-        public void doComplete(JSONObject values) {}
-
-        @Override
-        public void onError(UiError uiError) {}
-        @Override
-        public void onCancel() {}
-
-        public void onServerLoggedIn() {}
 
         // 到服务器后台登陆
         public void loginServer(final String openid, final String accessToken, long expiresTime, final String auth) {
             UserService service = ApiManager.getInstance().getUserService();
-            LoginBody body = new LoginBody(openid, accessToken, expiresTime, auth);
-            Observable<LoginResponse> ob = service.login(body);
+            LoginQQBody body = new LoginQQBody(openid, accessToken, expiresTime, auth);
+            Observable<LoginResponse> ob = service.loginQQ(body);
             ob.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<LoginResponse>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {}
-                    @Override
-                    public void onComplete() {}
-                    private void fail() { Util.showNetworkFailToast(activity); }
-                    @Override
-                    public void onNext(LoginResponse loginResponse) {
-                        if (loginResponse.isFail()) {
-                            fail();
-                            return;
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<LoginResponse>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {}
+                        @Override
+                        public void onComplete() {}
+                        private void fail() { Util.showNetworkFailToast(activity); }
+                        @Override
+                        public void onNext(LoginResponse loginResponse) {
+                            if (loginResponse.isFail()) {
+                                fail();
+                                return;
+                            }
+
+                            // 设置用户个人信息
+                            LoginHelper.this.setUserInfo(loginResponse);
+
+                            Log.i("OkHttp", "begin onQQLoggedIn");
+                            Intent intent = new Intent(activity, MainActivity.class);
+                            activity.startActivity(intent);
                         }
-
-                        // 设置用户个人信息
-                        setAuth(loginResponse.getAuth());
-                        setUserId(loginResponse.getUserId());
-                        setUserName(loginResponse.getNickname());
-                        setSignature(loginResponse.getSignature());
-                        setUserIcon(loginResponse.getIconPath());
-
-                        onServerLoggedIn();
-                        // 切换用户信息页面
-                        // activity.getUserPgae().changeUserFragment(true);
-                    }
-                    @Override
-                    public void onError(Throwable e) { fail(); }
-                });
+                        @Override
+                        public void onError(Throwable e) { fail(); }
+                    });
         }
     }
 }

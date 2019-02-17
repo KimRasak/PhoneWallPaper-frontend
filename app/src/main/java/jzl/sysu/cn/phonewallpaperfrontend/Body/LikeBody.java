@@ -1,6 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Body;
 
-public class LikeBody extends AuthBody {
+public class LikeBody {
     private long wallpaperId;
     private boolean like;
 

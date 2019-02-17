@@ -2,35 +2,19 @@ package jzl.sysu.cn.phonewallpaperfrontend.Fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
-import com.tencent.tauth.UiError;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-
-import jzl.sysu.cn.phonewallpaperfrontend.Activity.MainActivity;
-import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 
 public class LoginFragment extends Fragment {
@@ -78,7 +62,7 @@ public class LoginFragment extends Fragment {
         btn_weixin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String appId = getString(R.string.APP_ID);
+                String appId = getString(R.string.QQ_APP_ID);
                 Tencent tencent = Tencent.createInstance(appId, getActivity());
                 // tencent.logout(getA);
                 JSONObject jsonObject = tencent.loadSession(appId);

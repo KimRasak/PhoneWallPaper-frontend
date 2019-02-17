@@ -19,6 +19,16 @@
             tools:layout="@layout/fragment_login">
         </fragment>
     </FrameLayout>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/user_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:itemCount="2"
+        tools:listitem="@layout/item_user_menu"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp">
+
+    </android.support.v7.widget.RecyclerView>
     <LinearLayout
         android:id="@+id/local_layout"
         android:layout_width="match_parent"
@@ -38,6 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            tools:listitem  ="@layout/item_local_wallpaper"
             android:background="@color/localWallpaperBackground">
 
         </jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView>

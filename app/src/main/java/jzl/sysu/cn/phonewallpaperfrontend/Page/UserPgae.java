@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -24,10 +26,14 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
+import java.util.List;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Activity.UploadActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.ViewWallpaperActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.LocalRecyclerViewAdapter;
+import jzl.sysu.cn.phonewallpaperfrontend.Adapter.UserMenuRecyclerViewAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.Constants;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.MenuItem;
 import jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView;
 import jzl.sysu.cn.phonewallpaperfrontend.Model.LocalWallpaper;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.LoginFragment;
@@ -37,7 +43,10 @@ import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Fragment.UserInfoFragment;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
 
-public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemClickListener {
+public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemClickListener, UserMenuRecyclerViewAdapter.ItemClickListener {
+
+    // 用户菜单栏
+    private RecyclerView rvUserMenu;
 
     // 本地壁纸栏
     private LinearLayout localLayout; // 有壁纸时显示
@@ -65,6 +74,7 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
         View view = inflater.inflate(R.layout.page_user, container, false);
 
         // find views.
+        rvUserMenu = view.findViewById(R.id.user_menu);
         rvLocal = view.findViewById(R.id.rv_local);
         localLayout = view.findViewById(R.id.local_layout);
         noWallpaperLayout = view.findViewById(R.id.no_wallpaper_layout);
@@ -79,9 +89,10 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
         LoginHelper helper = LoginHelper.getInstance();
 
         // 登陆QQ
-        // Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: " + helper.getTencent().loadSession(getString(R.string.APP_ID)), Toast.LENGTH_LONG).show();
+         Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: ", Toast.LENGTH_LONG).show();
 
         changeUserFragment(helper.isLoggedIn(getActivity()));
+        initUserMenu();
         initLocalLayout();
         super.onResume();
     }
@@ -102,6 +113,16 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
                     .replace(R.id.user_info_container, fragment)
                     .commit();
         }
+    }
+    private void initUserMenu() {
+        rvUserMenu.setLayoutManager(new LinearLayoutManager(this.getContext()));
+
+        // 设置Adapter
+        List<MenuItem> menuItems = new ArrayList<>();
+        menuItems.add(new MenuItem(R.drawable.ic_baseline_upload_24px, "上传壁纸"));
+        UserMenuRecyclerViewAdapter adapter = new UserMenuRecyclerViewAdapter(getContext(), menuItems);
+        adapter.setOnItemClickListener(this);
+        rvUserMenu.setAdapter(adapter);
     }
 
     public void initLocalLayout() {
@@ -138,7 +159,7 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
     }
 
     @Override
-    public void onItemClick(View view, int position) {
+    public void onWallpaperItemClick(View view, int position) {
         LocalWallpaper wallpaper = localAdapter.get(position);
         String path = wallpaper.getImgSrc();
         final Bitmap bitmap = BitmapFactory.decodeFile(path);
@@ -163,7 +184,7 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
     }
 
     @Override
-    public void onItemLongClick(View view, final int position) {
+    public void onWallpaperItemLongClick(View view, final int position) {
         final Long wallpaperId = localAdapter.get(position).getWallpaperId();
 
         final AlertDialog.Builder normalDialog = new AlertDialog.Builder(getActivity());
@@ -178,5 +199,13 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
                 }).setNegativeButton("否", null);
         normalDialog.show();
 
+    }
+
+    @Override
+    public void onMenuItemClick(View view, int position) {
+        if (position == UserMenuRecyclerViewAdapter.ITEM_UPLOAD_WALLPAPER) {
+            Intent intent = new Intent(getActivity(), UploadActivity.class);
+            startActivity(intent);
+        }
     }
 }

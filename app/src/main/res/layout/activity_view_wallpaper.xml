@@ -147,7 +147,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="8dp"
                     android:layout_marginBottom="4dp"
-                    android:background="@drawable/button"
+                    android:background="@drawable/btn_add_comments"
                     android:text="添加评论"
                     android:padding="8dp"
                     android:minHeight="0dp"

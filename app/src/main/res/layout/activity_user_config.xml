@@ -132,6 +132,11 @@
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
         android:text="注销"
+        android:textSize="16sp"
+        android:padding="6dp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:background="@drawable/btn_orange_border"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

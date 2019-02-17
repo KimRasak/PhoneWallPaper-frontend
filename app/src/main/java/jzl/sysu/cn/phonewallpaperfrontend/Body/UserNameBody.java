@@ -1,6 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Body;
 
-public class UserNameBody extends AuthBody{
+public class UserNameBody {
     private String userName;
 
     public UserNameBody(String userName) {

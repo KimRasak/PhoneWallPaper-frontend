@@ -1,6 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Body;
 
-public class SetBody extends AuthBody{
+public class SetBody {
     private Long wallpaperId;
 
     public SetBody(Long wallpaperId) {

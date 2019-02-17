@@ -1,4 +1,4 @@
-package jzl.sysu.cn.phonewallpaperfrontend;
+package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -6,10 +6,12 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.tencent.connect.common.Constants;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
 import com.tencent.tauth.Tencent;
 
 import de.hdodenhof.circleimageview.CircleImageView;
-import jzl.sysu.cn.phonewallpaperfrontend.Activity.MainActivity;
+import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.R;
 
 public class LoginActivity extends AppCompatActivity {
     CircleImageView tencent;
@@ -29,22 +31,20 @@ public class LoginActivity extends AppCompatActivity {
         tencent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                 listener = helper.new QQLoginListener(LoginActivity.this) {
-                    @Override
-                    public void onServerLoggedIn() {
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                    }
-                };
+                listener = helper.new QQLoginListener(LoginActivity.this);
                 helper.logInQQ(LoginActivity.this, listener);
             }
         });
-    }
 
-    @Override
-    public void onBackPressed() {
-        System.exit(0);
-        finish();
+        wechat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final SendAuth.Req req = new SendAuth.Req();
+                req.scope = "snsapi_userinfo";
+                req.state = "none";
+                LoginHelper.getInstance().getWX().sendReq(req);
+            }
+        });
     }
 
     @Override

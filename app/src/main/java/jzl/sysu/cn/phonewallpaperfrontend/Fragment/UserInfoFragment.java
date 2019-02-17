@@ -5,6 +5,7 @@ import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,6 +93,7 @@ public class UserInfoFragment extends Fragment {
     }
 
     private void loadUserIcon(String userIconSrc) {
+        Log.v("userInfo", userIconSrc);
         Glide.with(this).load(userIconSrc).into(userIcon);
     }
 }

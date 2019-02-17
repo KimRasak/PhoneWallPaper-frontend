@@ -221,14 +221,12 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         Log.i("likeLayout", isLike + "");
         if (isLike) {
             // 实心红色爱心
-            VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_favorite_24px, getTheme());
-            vectorDrawableCompat.setTint(getResources().getColor(R.color.red));
+            VectorDrawableCompat vectorDrawableCompat = Util.getColoredVectorDrawable(this, R.drawable.ic_baseline_favorite_24px,  R.color.red);
             likeImage.setImageDrawable(vectorDrawableCompat);
 
         } else {
             // 空心黑色爱心
-            VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(getResources(), R.drawable.ic_baseline_favorite_border_24px, getTheme());
-            vectorDrawableCompat.setTint(getResources().getColor(R.color.black));
+            VectorDrawableCompat vectorDrawableCompat = Util.getColoredVectorDrawable(this, R.drawable.ic_baseline_favorite_border_24px,  R.color.black);
             likeImage.setImageDrawable(vectorDrawableCompat);
         }
 

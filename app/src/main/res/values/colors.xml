@@ -13,4 +13,7 @@
     <color name="bnbBackground">#e2e2db</color>
     <color name="localWallpaperBackground">#ffffff</color>
     <color name="userConfigGray">#BDB9B9</color>
+    <color name="orangeLight">#FD6A6A</color>
+    <color name="orange">#F74242</color>
+    <color name="orangeDark">#EE3D3D</color>
 </resources>

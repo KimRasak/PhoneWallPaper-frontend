@@ -1,6 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Body;
 
-public class PutCommentBody extends AuthBody {
+public class PutCommentBody  {
     private Long wallPaperId;
     private Long toCommentId; // 可为空，当值为-1时表示为空。
     private String content;

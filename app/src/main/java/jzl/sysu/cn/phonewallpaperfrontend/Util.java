@@ -3,7 +3,11 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import android.app.Activity;
 import android.app.WallpaperManager;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Message;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.widget.Toast;
@@ -11,6 +15,7 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 
 import jzl.sysu.cn.phonewallpaperfrontend.Activity.ViewWallpaperActivity;
@@ -98,5 +103,19 @@ public class Util {
         }else{
             return Bitmap.createBitmap(bitmap, 0, (h1 - h2) / 2, w2, h2);
         }
+    }
+
+    public static RequestBody toRequestBodyOfText (String value) {
+        return RequestBody.create(MediaType.parse("text/plain"), value);
+    }
+
+    public static RequestBody toRequestBodyOfImage(File file, ProgressNotificationManager manager){
+        return new ProgressRequestBody(file, new DefaultProgressListener(manager.getObserver()));
+    }
+
+    public static VectorDrawableCompat getColoredVectorDrawable(Context context, int vectorDrawable, int color) {
+        VectorDrawableCompat vectorDrawableCompat = VectorDrawableCompat.create(context.getResources(), vectorDrawable, context.getTheme());
+        vectorDrawableCompat.setTint(context.getResources().getColor(color));
+        return vectorDrawableCompat;
     }
 }

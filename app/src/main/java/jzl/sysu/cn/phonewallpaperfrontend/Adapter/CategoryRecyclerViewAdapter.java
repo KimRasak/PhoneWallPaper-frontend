@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
-import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.Model.Category;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 
@@ -37,7 +36,7 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.item_category, parent, false);
+        View view = mInflater.inflate(R.layout.item_repo_category, parent, false);
 
         // 动态调整组件高度，而组件宽度由屏幕宽度决定。
         int margin = 4; // margin是1dp。

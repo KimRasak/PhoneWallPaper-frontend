@@ -3,6 +3,35 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="APP_ID">1108027970</string>
+    <string name="QQ_APP_ID">1108027970</string>
+    <string name="WX_APP_ID">wx69217cda4b8f3466</string>
     <string name="default_user_name">用户名</string>
+    <string name="tv_category_default">点击选择分类</string>
+    <string-array name="categories">
+        <item>动漫</item>
+        <item>动物</item>
+        <item>卡通</item>
+
+        <item>城市</item>
+        <item>影视</item>
+        <item>情感</item>
+
+        <item>文字</item>
+        <item>明星</item>
+        <item>机械</item>
+
+        <item>游戏</item>
+        <item>物语</item>
+        <item>男人</item>
+
+        <item>美女</item>
+        <item>艺术</item>
+        <item>视觉</item>
+
+        <item>设计</item>
+        <item>运动</item>
+        <item>风景</item>
+    </string-array>
+
+    <string name="progress_notification_title_template">Progress: %1$s</string>
 </resources>

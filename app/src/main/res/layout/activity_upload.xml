@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activity.UploadActivity">
+
+    <Button
+        android:id="@+id/upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:padding="6dp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+
+        android:background="@drawable/btn_orange_border"
+        android:text="上传"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/wallpaperNameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/upload">
+
+        <TextView
+            android:id="@+id/titleWallpaperName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="壁纸名称："
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/etWallpaperName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLength="20"
+            android:inputType="textPersonName"
+            android:textSize="14sp"
+            android:theme="@style/EditText"
+            android:hint="最多20个字"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/categoryLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/wallpaperNameLayout">
+        <TextView
+            android:id="@+id/titleCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="图片分类："
+            android:textSize="14sp" />
+        <TextView
+            android:id="@+id/tvCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:text="@string/tv_category_default"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cvWallpaper"
+        android:layout_width="150dp"
+        android:layout_height="225dp"
+        app:cardCornerRadius="10dp"
+        android:background="@drawable/card_view_with_border"
+        app:layout_constraintTop_toBottomOf="@id/categoryLayout"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="16dp">
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/wallpaperLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/wallpaper"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/ic_add"/>
+        </android.support.constraint.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/wallpaperSelected"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone"/>
+
+    </android.support.v7.widget.CardView>
+
+</android.support.constraint.ConstraintLayout>

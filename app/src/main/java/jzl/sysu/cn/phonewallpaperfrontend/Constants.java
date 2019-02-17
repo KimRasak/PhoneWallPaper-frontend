@@ -21,7 +21,15 @@ public class Constants {
     public final static int COMMENT_PAGE_SIZE = 10;
 
     // shared preferences names.
+    public final static String LOGIN_HELPER = "login_helper";
+    public final static String LOGIN_HELPER_COOKIE = "cookie";
     public final static String ROOT_FOLDER = "my_wallpaper";
     public final static String LOCAL_WALLPAPER = "local_wallpaper";
     public final static double WALLPAPER_SCALE = 1.6;
+
+    // handler
+    public final static int UPLOAD_HANDLER_INDEX = 1;
+
+    // notification id
+    public static final int NOTIFICATION_ID_UPLOAD = 1;
 }

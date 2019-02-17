@@ -47,7 +47,7 @@ public class LocalRecyclerViewAdapter extends RecyclerView.Adapter<LocalRecycler
         int width = (int)(parent.getMeasuredWidth() - pxMargin) / spanCount;
         view.getLayoutParams().height =  (int)(width * scale); // 每行spanCount个，且图片的宽比高为1.5:1，
 
-        return new LocalRecyclerViewAdapter.ViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override
@@ -59,19 +59,22 @@ public class LocalRecyclerViewAdapter extends RecyclerView.Adapter<LocalRecycler
 
         Bitmap bitmap = BitmapFactory.decodeFile(imgSrc);
         holder.wallpaper.setImageBitmap(bitmap);
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mClickListener.onItemClick(v, holder.getAdapterPosition());
-            }
-        });
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                mClickListener.onItemLongClick(v, holder.getAdapterPosition());
-                return false;
-            }
-        });
+
+        if (mClickListener != null) {
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mClickListener.onWallpaperItemClick(v, holder.getAdapterPosition());
+                }
+            });
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    mClickListener.onWallpaperItemLongClick(v, holder.getAdapterPosition());
+                    return false;
+                }
+            });
+        }
     }
 
     @Override
@@ -84,6 +87,7 @@ public class LocalRecyclerViewAdapter extends RecyclerView.Adapter<LocalRecycler
     public LocalWallpaper get(int pos) { return this.data.get(pos); }
 
     public void remove(int pos) { this.data.remove(pos); }
+
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder{
         ImageView wallpaper;
@@ -100,7 +104,7 @@ public class LocalRecyclerViewAdapter extends RecyclerView.Adapter<LocalRecycler
 
     // 父Activity会实现该接口来监听点击事件。
     public interface ItemClickListener {
-        void onItemClick(View view, int position);
-        void onItemLongClick(View view, int position);
+        void onWallpaperItemClick(View view, int position);
+        void onWallpaperItemLongClick(View view, int position);
     }
 }
