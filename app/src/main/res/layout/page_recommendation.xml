@@ -44,4 +44,12 @@
             android:text="loading..."/>
 
     </com.aspsine.swipetoloadlayout.SwipeToLoadLayout>
+
+    <TextView
+        android:id="@+id/tvNetworkError"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:gravity="center"
+        android:text="网络连接错误,请点击重试"/>
 </LinearLayout>

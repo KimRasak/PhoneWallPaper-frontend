@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -47,6 +48,8 @@ public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.It
     private GridLayoutRecyclerView rvCategory;
     private CategoryRecyclerViewAdapter rvAdapter;
 
+    private TextView tvNetworkError;
+
     public RepoPgae() {
         // Required empty public constructor
     }
@@ -57,15 +60,27 @@ public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.It
         View view = inflater.inflate(R.layout.page_repo, container, false);
 
         rvCategory = view.findViewById(R.id.rv_categories);
+        tvNetworkError = view.findViewById(R.id.tvNetworkError);
+
         ArrayList<Category> emptyDataItems = new ArrayList<>();
         rvAdapter = new CategoryRecyclerViewAdapter(view.getContext(), emptyDataItems);
         rvCategory.setAdapter(rvAdapter);
         rvAdapter.setClickListener(this);
-        loadCategories();
+        loadCategories(false);
+
+        // 切换界面，加载图片
+        tvNetworkError.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadCategories(false);
+                rvCategory.setVisibility(View.VISIBLE);
+                tvNetworkError.setVisibility(View.GONE);
+            }
+        });
         return view;
     }
 
-    private void loadCategories() {
+    private void loadCategories(final boolean makeToast) {
         CategoryService service = ApiManager.getInstance().getCategoryService();
         Observable<CategoryResponse> ob = service.getCategoryList();
         ob.subscribeOn(Schedulers.io())
@@ -76,6 +91,11 @@ public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.It
                     @Override
                     public void onComplete() {}
 
+                    private void showText() {
+                        rvCategory.setVisibility(View.GONE);
+                        tvNetworkError.setVisibility(View.VISIBLE);
+                    }
+
                     @Override
                     public void onNext(CategoryResponse res) {
                         rvAdapter.setHostName(res.getHostName());
@@ -84,7 +104,12 @@ public class RepoPgae extends Fragment implements CategoryRecyclerViewAdapter.It
                     }
 
                     @Override
-                    public void onError(Throwable e) { Util.showNetworkFailToast(getActivity()); }
+                    public void onError(Throwable e) {
+                        if (makeToast) Util.showNetworkFailToast(getActivity());
+                        else showText();
+                        Log.v(Constants.LOG_TAG, "load categories " + e.getMessage());
+                        Util.showNetworkFailToast(getActivity());
+                    }
                 });
     }
 

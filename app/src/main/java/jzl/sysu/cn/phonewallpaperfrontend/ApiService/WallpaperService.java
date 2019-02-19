@@ -49,7 +49,6 @@ public interface WallpaperService {
     @POST("wallpaper/upload")
     Observable<UploadResponse> uploadWallpaper(@PartMap Map<String, RequestBody> params);
 
-
     @POST("comment/view")
     Observable<List<Comment>> getComment(@Body GetCommentBody body);
 

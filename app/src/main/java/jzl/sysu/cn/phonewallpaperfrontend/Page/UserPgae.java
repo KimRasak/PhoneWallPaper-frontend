@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,6 +16,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +70,7 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.page_user, container, false);
@@ -89,7 +91,8 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
         LoginHelper helper = LoginHelper.getInstance();
 
         // 登陆QQ
-         Toast.makeText(getActivity(), "登录状态:" + helper.isLoggedIn(getActivity()) + " openid: " + helper.getTencent().getOpenId() + " session: ", Toast.LENGTH_LONG).show();
+        if (helper.getTencent() != null)
+            Log.v(Constants.LOG_TAG, String.format("登陆状态: %b, openid: %s", helper.isLoggedIn(getActivity()), helper.getTencent().getOpenId()));
 
         changeUserFragment(helper.isLoggedIn(getActivity()));
         initUserMenu();
@@ -165,21 +168,21 @@ public class UserPgae extends Fragment implements LocalRecyclerViewAdapter.ItemC
         final Bitmap bitmap = BitmapFactory.decodeFile(path);
         final AlertDialog.Builder normalDialog = new AlertDialog.Builder(getActivity());
         normalDialog.setTitle("是否设置为壁纸？")
-                .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        DisplayMetrics metrics = Util.setWallpaperManagerFitScreen(getActivity());
-                        // Bitmap containScreen = Util.scaleBitmapToContainScreen(bitmap, metrics);
-                        Bitmap wallpaper = Util.centerCrop(bitmap, metrics);
-                        // Bitmap wallpaper = Bitmap.createScaledBitmap(bitmap, metrics.widthPixels, metrics.heightPixels, true);
-                        final WallpaperManager wallpaperManager = WallpaperManager.getInstance(getActivity());
-                        try {
-                            wallpaperManager.setBitmap(wallpaper);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).setNegativeButton("否", null);
+            .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                DisplayMetrics metrics = Util.setWallpaperManagerFitScreen(getActivity());
+                // Bitmap containScreen = Util.scaleBitmapToContainScreen(bitmap, metrics);
+                Bitmap wallpaper = Util.centerCrop(bitmap, metrics);
+                // Bitmap wallpaper = Bitmap.createScaledBitmap(bitmap, metrics.widthPixels, metrics.heightPixels, true);
+                final WallpaperManager wallpaperManager = WallpaperManager.getInstance(getActivity());
+                try {
+                    wallpaperManager.setBitmap(wallpaper);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                }
+            }).setNegativeButton("否", null);
         normalDialog.show();
     }
 

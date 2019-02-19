@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.Model.Category;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 
@@ -53,7 +54,6 @@ public class CategoryRecyclerViewAdapter extends RecyclerView.Adapter<CategoryRe
         // 绑定视图。
         holder.name.setText(item.getName());
         String background = "http://" + hostName + "/" + item.getBackground();
-        Log.i("categoryRV", background);
         Glide.with(context)
                 .load(background)
                 .into(holder.background);

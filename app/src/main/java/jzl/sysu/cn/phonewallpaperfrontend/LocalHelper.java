@@ -99,7 +99,7 @@ public class LocalHelper {
     }
 
     public static ArrayList<LocalWallpaper> load(String folderPath) {
-        Log.i("localHelper", folderPath);
+        Log.i(Constants.LOG_TAG, folderPath);
         File folder = getDir(folderPath);
         ArrayList<LocalWallpaper> res = new ArrayList<>();
 
@@ -149,7 +149,7 @@ public class LocalHelper {
 
         // 输出图片到文件。
         String path = output(bmp, file);
-        Log.i("helper save", path);
+        Log.i(Constants.LOG_TAG, path);
     }
 
     public static void remove(String folderPath, Long wallpaperId) {

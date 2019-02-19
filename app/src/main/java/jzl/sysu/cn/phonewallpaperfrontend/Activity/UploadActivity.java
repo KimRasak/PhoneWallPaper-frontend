@@ -38,6 +38,7 @@ import jzl.sysu.cn.phonewallpaperfrontend.Adapter.PopWindowCategoryAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.WallpaperService;
 import jzl.sysu.cn.phonewallpaperfrontend.Body.UploadWallpaperBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.CodeResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.UploadResponse;
@@ -157,7 +158,6 @@ public class UploadActivity extends AppCompatActivity implements PopWindowCatego
                 .create();
         dialog = alertDialog7.show();
         adapter.notifyDataSetChanged();
-        Log.i("popWindow", "" + adapter.getItemCount());
     }
 
     private void showSelectedWallpaper(String picPath) {
@@ -217,8 +217,11 @@ public class UploadActivity extends AppCompatActivity implements PopWindowCatego
                     public void onNext(UploadResponse response) {
                         if (response.isFail())
                             Util.showNetworkFailToast(UploadActivity.this);
-                        else
-                            Toast.makeText(UploadActivity.this, "成功上传, 当天剩余上传次数: " + response.getLeftCound(), Toast.LENGTH_SHORT).show();
+                        else {
+                            Log.i(Constants.LOG_TAG, "当天剩余上传次数: " + response.getLeftCound());
+                            Toast.makeText(UploadActivity.this, "成功上传", Toast.LENGTH_SHORT).show();
+
+                        }
                     }
                 });
         finish();

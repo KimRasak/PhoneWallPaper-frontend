@@ -1,5 +1,6 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 
 import android.support.v4.view.ViewPager;
@@ -45,18 +46,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
         initViewPager();
         // initLoginHelper();
         // initImageLoader();
-    }
-
-    private void initImageLoader() {
-        // Create global configuration and initialize ImageLoader with this config
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
-        ImageLoader.getInstance().init(config);
-    }
-
-    private void initLoginHelper() {
-        LoginHelper helper = LoginHelper.getInstance();
-        listener = helper.new QQLoginListener(this);
-        helper.init(this);
     }
 
     private void findView() {
@@ -113,10 +102,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
     @Override
     public void onTabReselected(int position) {}
 
-    public UserPgae getUserPgae() {
-        return userPgae;
-    }
-
     // 当点击某个登陆按键时处理。
     @Override
     public void doLogin(String auth) {
@@ -128,5 +113,18 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
         // 登陆QQ
         final LoginHelper helper = LoginHelper.getInstance();
         helper.logInQQ(MainActivity.this, listener);
+    }
+
+    public static final String TAG_EXIT = "exit";
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null) {
+            boolean isExit = intent.getBooleanExtra(TAG_EXIT, false);
+            if (isExit) {
+                this.finish();
+            }
+        }
     }
 }

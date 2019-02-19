@@ -11,4 +11,12 @@
         android:layout_height="wrap_content">
 
     </jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.GridLayoutRecyclerView>
+
+    <TextView
+        android:id="@+id/tvNetworkError"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:gravity="center"
+        android:text="网络连接错误,请点击重试"/>
 </LinearLayout>

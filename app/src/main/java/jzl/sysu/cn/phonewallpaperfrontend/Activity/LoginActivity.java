@@ -3,6 +3,7 @@ package jzl.sysu.cn.phonewallpaperfrontend.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.tencent.connect.common.Constants;
@@ -45,6 +46,12 @@ public class LoginActivity extends AppCompatActivity {
                 LoginHelper.getInstance().getWX().sendReq(req);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        Log.v(jzl.sysu.cn.phonewallpaperfrontend.Constants.LOG_TAG, "LoginAc");
+        super.onResume();
     }
 
     @Override

@@ -6,31 +6,20 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Looper;
-import android.provider.MediaStore;
 import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -42,26 +31,13 @@ import com.bumptech.glide.Glide;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -78,6 +54,7 @@ import jzl.sysu.cn.phonewallpaperfrontend.Model.Comment;
 import jzl.sysu.cn.phonewallpaperfrontend.Adapter.CommentsAdapter;
 import jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
+import jzl.sysu.cn.phonewallpaperfrontend.Model.WallPaper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.ClickResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.CodeResponse;
@@ -88,6 +65,10 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     ImageView wallpaper;
     Long wallpaperId;
     String wallpaperSrc;
+
+    // 提交者栏
+    LinearLayout uploaderLayout;
+    TextView tvUploaderName;
 
     // 中间栏
     LinearLayout likeLayout;
@@ -116,22 +97,20 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     // 下载框
     ProgressDialog progressDialog;
 
-    private int SET_WALLPAPER = 166;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_wallpaper);
 
-        wallpaper = findViewById(R.id.wallpaper);
-
         findView();
 
         // 从intent获取数据。
         Intent intent = getIntent();
-        wallpaperId = intent.getLongExtra("wallpaperId", -1L);
+        WallPaper wallPaper = (WallPaper) intent.getSerializableExtra("wallpaper");
+        String uploaderName = wallPaper.getUploaderName();
+        wallpaperId = wallPaper.getId();
         wallpaperSrc = intent.getStringExtra("wallpaperSrc");
-        likeNum = intent.getIntExtra("likeNum", -1);
+        likeNum = wallPaper.getLikeNum();
 
         if (wallpaperSrc == null || wallpaperId == -1L || likeNum == -1) // 错误进入该页
             return;
@@ -141,21 +120,36 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
             @Override
             public void run() {
                 double scale = Util.getWindowScale(ViewWallpaperActivity.this);
-                Log.i("wallpaperActivity", "measured width: " + wallpaper.getMeasuredWidth());
                 ViewGroup.LayoutParams lp = wallpaper.getLayoutParams();
                 lp.height =  (int)(wallpaper.getMeasuredWidth() * scale );
                 wallpaper.setLayoutParams(lp);
-                Log.i("wallpaperActivity", "height: " + lp.height);
+                Log.v(Constants.LOG_TAG, String.format("measured width: %s, height:%d", wallpaper.getMeasuredWidth(), lp.height));
+
             }
         });
         Glide.with(this).load(wallpaperSrc).into(wallpaper);
 
+        initUploaderLayout(uploaderName);
         initMiddleLayout();
         initHotCommentsLayout();
         initCommentsLayout();
     }
 
+    private void initUploaderLayout(String uploaderName) {
+        if (uploaderName != null)
+            tvUploaderName.setText(uploaderName);
+        else
+            uploaderLayout.setVisibility(View.GONE);
+
+    }
+
     public void findView() {
+        wallpaper = findViewById(R.id.wallpaper);
+
+        // 提交者栏
+        uploaderLayout = findViewById(R.id.uploaderLayout);
+        tvUploaderName = findViewById(R.id.uploaderName);
+
         // 中间栏
         likeLayout = findViewById(R.id.likeLayout);
         tvLikeNum = findViewById(R.id.likeNum);
@@ -218,7 +212,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     }
 
     private void changeLikeLayout(boolean isLike, int likeNum) {
-        Log.i("likeLayout", isLike + "");
         if (isLike) {
             // 实心红色爱心
             VectorDrawableCompat vectorDrawableCompat = Util.getColoredVectorDrawable(this, R.drawable.ic_baseline_favorite_24px,  R.color.red);
@@ -307,7 +300,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
         // String tail = String.format(Locale.CHINA, "?x-oss-process=image/resize,m_fixed,w_%d,h_%d", width, height);
         String tail = String.format(Locale.CHINA, "?x-oss-process=image/resize,m_fixed,w_%d,h_%d", width, height);
         String scaleSrc = wallpaperSrc + tail;
-        // Log.i("viewWallpaper", scaleSrc);
 
         // 下载图片
         imageLoader.loadImage(wallpaperSrc, new SimpleImageLoadingListener(){
@@ -330,7 +322,6 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                             }
                             @Override
                             public void onNext(CodeResponse codeResponse) {
-                                Log.i("code response", codeResponse.getCode() + " ");
                                 if (codeResponse.isFail())
                                     fail();
 
@@ -412,9 +403,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
     }
 
     @Override
-    public void onItemClick(View view, int position) {
-        Log.i("sdf", position + " ");
-        Comment comment = commentsAdapter.get(position);
+    public void onItemClick(View view, int position) {Comment comment = commentsAdapter.get(position);
         popEditCommentWindow(comment.getCid());
     }
 

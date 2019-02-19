@@ -25,7 +25,6 @@ public class DefaultProgressListener implements ProgressRequestBody.ProgressList
 
     @Override
     public void onProgress(long hasWrittenLen, long totalLen, boolean hasFinish) {
-        Log.i("progressListen", "----the current " + hasWrittenLen + "----" + totalLen + "-----" + (hasWrittenLen * 100 / totalLen));
         int percent = (int) (hasWrittenLen * 100 / totalLen);
         if (percent > 100) percent = 100;
         if (percent < 0) percent = 0;

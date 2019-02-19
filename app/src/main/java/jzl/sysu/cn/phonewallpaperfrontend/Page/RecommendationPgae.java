@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aspsine.swipetoloadlayout.OnLoadMoreListener;
@@ -52,8 +53,10 @@ import okhttp3.Response;
 public class RecommendationPgae extends Fragment implements WallPaperRecyclerViewAdapter.ItemClickListener {
 
     private final static int SPAN_COUNT = 3;
-    SwipeToLoadLayout swipeLayout;
+    private SwipeToLoadLayout swipeLayout;
     private WallPaperRecyclerViewAdapter adapter;
+
+    private TextView tvNetworkError;
 
     private static final String CLICK_URL = "http://" + Constants.PC_IP +":9090/wallpaper/click";
 
@@ -73,6 +76,7 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
         View view = inflater.inflate(R.layout.page_recommendation, container, false);
         GridLayoutRecyclerView rv = view.findViewById(R.id.swipe_target);
         swipeLayout = view.findViewById(R.id.wallpaper_swipe_layout);
+        tvNetworkError = view.findViewById(R.id.tvNetworkError);
 
         // double scale = Util.getWindowScale(getActivity());
         double scale = Constants.WALLPAPER_SCALE;
@@ -83,9 +87,19 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
         adapter.setClickListener(this);
 
         // 设置上拉刷新的listener
-        LoadWallpaperListener loadWallpaperListener = new LoadWallpaperListener();
+        final LoadWallpaperListener loadWallpaperListener = new LoadWallpaperListener();
         swipeLayout.setOnLoadMoreListener(loadWallpaperListener);
         loadWallpaperListener.loadWallPaperIfEmpty();
+
+        // 切换界面，加载图片
+        tvNetworkError.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadWallpaperListener.loadWallPaperIfEmpty();
+                swipeLayout.setVisibility(View.VISIBLE);
+                tvNetworkError.setVisibility(View.GONE);
+            }
+        });
         return view;
     }
 
@@ -93,14 +107,11 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
     public void onItemClick(View view, int position, String wallpaperSrc) {
         // 点击某张图片后执行。
         WallPaper wallPaper = adapter.get(position);
-        Long wallpaperId = wallPaper.getId();
-        int likeNum = wallPaper.getLikeNum();
 
         // 前往“查看图片”页面
         Intent intent = new Intent(getActivity(), ViewWallpaperActivity.class);
-        intent.putExtra("wallpaperId", wallpaperId);
+        intent.putExtra("wallpaper", wallPaper);
         intent.putExtra("wallpaperSrc", wallpaperSrc);
-        intent.putExtra("likeNum", likeNum);
         startActivity(intent);
     }
 
@@ -108,19 +119,20 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
     public class LoadWallpaperListener implements OnLoadMoreListener {
         @Override
         public void onLoadMore() {
-            loadWallPaper();
+            loadWallPaper(true );
         }
 
         public void loadWallPaperIfEmpty() {
-            if (isEmpty())
-                loadWallPaper();
+            if (isEmpty()) {
+                loadWallPaper(false);
+            }
         }
 
         public boolean isEmpty() {
             return adapter.getItemCount() == 0;
         }
 
-        public void loadWallPaper() {
+        public void loadWallPaper(final boolean makeToast) {
             int startNum = adapter.getItemCount();
 
             WallpaperService service = ApiManager.getInstance().getWallpaperService();
@@ -134,6 +146,11 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
                     @Override
                     public void onComplete() {}
 
+                    private void showText() {
+                        swipeLayout.setVisibility(View.GONE);
+                        tvNetworkError.setVisibility(View.VISIBLE);
+                    }
+
                     @Override
                     public void onNext(PageResponse res) {
                         List<WallPaper> wallPapers = res.getWallpapers();
@@ -146,7 +163,13 @@ public class RecommendationPgae extends Fragment implements WallPaperRecyclerVie
                     }
 
                     @Override
-                    public void onError(Throwable e) { Util.showNetworkFailToast(getActivity()); }
+                    public void onError(Throwable e) {
+                        if (makeToast) {
+                            Util.showNetworkFailToast(getActivity());
+                            swipeLayout.setLoadingMore(false);
+                        }
+                        else showText();
+                    }
 
                 });
         }

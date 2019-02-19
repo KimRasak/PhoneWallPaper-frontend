@@ -1,10 +1,18 @@
 package jzl.sysu.cn.phonewallpaperfrontend.Model;
 
-public class WallPaper {
+import java.io.Serializable;
+import java.util.Date;
+
+public class WallPaper implements Serializable {
     private Long id;
     private String category;
     private String path;
     private int likeNum;
+
+    // 上传者信息
+    private Long uploaderId;
+    private String uploaderName;
+    private Date date;
 
     public WallPaper(Long id, String category, String path, int likeNum) {
         this.id = id;
@@ -43,5 +51,29 @@ public class WallPaper {
 
     public void setLikeNum(int likeNum) {
         this.likeNum = likeNum;
+    }
+
+    public Long getUploaderId() {
+        return uploaderId;
+    }
+
+    public void setUploaderId(Long uploaderId) {
+        this.uploaderId = uploaderId;
+    }
+
+    public String getUploaderName() {
+        return uploaderName;
+    }
+
+    public void setUploaderName(String uploaderName) {
+        this.uploaderName = uploaderName;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 }

@@ -3,13 +3,14 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import okhttp3.MediaType;
 
 public class Constants {
+    public static final String ECS_PC_IP = "47.106.236.1";
     public static final String EMULATOR_PC_IP = "10.0.2.2";
     public static final String HOME_PC_IP = "192.168.101.2";
     public static final String SCHOOL_PC_IP = "192.168.199.181";
-    public static final String PC_IP = HOME_PC_IP;
+    public static final String PC_IP = HOME_PC_IP ;
 
-    public static final MediaType FORM_CONTENT_TYPE
-            = MediaType.parse("application/json; charset=utf-8");
+    // Log.i統一使用tag
+    public static final String LOG_TAG = "jzlPhoneWallpaper";
 
     // activity request code
     public static final int REQUEST_CHANGE_USER_CONFIG = 12;

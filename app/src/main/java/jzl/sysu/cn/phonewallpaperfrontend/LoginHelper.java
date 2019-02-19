@@ -121,12 +121,14 @@ public class LoginHelper {
                     @Override
                     public void onNext(CodeResponse codeResponse) {
                         if (codeResponse.isFail()) {
-                            Log.v("LoginHelper", "logout fail");
                             return;
                         }
                         ApiManager.clearCookies(context);
-                        Log.v("LoginHelper", "logout success.");
-                        System.exit(0);
+                        Log.v(Constants.LOG_TAG, "logout success.");
+
+                        Intent intent = new Intent(context, MainActivity.class);
+                        intent.putExtra(MainActivity.TAG_EXIT, true);
+                        context.startActivity(intent);
                     }
 
                     @Override
@@ -252,7 +254,7 @@ public class LoginHelper {
         public void doComplete(JSONObject values) {
             // 从QQ端读取QQ用户信息，并登陆后台。
             try {
-                Log.i("logInfo", "values: " + values.toString());
+                Log.i(Constants.LOG_TAG, "values: " + values.toString());
                 String accessToken = values.getString("access_token");
                 String openid = values.getString("openid");
                 long expiresIn = values.getLong("expires_in"); // qq默认为90天
@@ -265,7 +267,7 @@ public class LoginHelper {
                 helper.setQQInfo(openid, accessToken, expiresIn);
                 helper.setQQLocalLoggedIn(activity, true);
 
-                Log.i("logInfo", String.format("token: %s, id: %s, expires_in: %d, expires_time: %d", accessToken, openid, expiresIn, expiresTime));
+                Log.i(Constants.LOG_TAG, String.format("token: %s, id: %s, expires_in: %d, expires_time: %d", accessToken, openid, expiresIn, expiresTime));
                 loginServer(openid, accessToken, expiresTime, AUTH_QQ);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -295,8 +297,9 @@ public class LoginHelper {
                             // 设置用户个人信息
                             LoginHelper.this.setUserInfo(loginResponse);
 
-                            Log.i("OkHttp", "begin onQQLoggedIn");
+                            Log.i(Constants.LOG_TAG, "begin onQQLoggedIn");
                             Intent intent = new Intent(activity, MainActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                             activity.startActivity(intent);
                         }
                         @Override

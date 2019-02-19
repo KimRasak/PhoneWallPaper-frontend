@@ -23,36 +23,28 @@
                 android:scaleType="centerCrop"
                 android:background="@color/gray"/>
 
+            <LinearLayout
+                android:id="@+id/uploaderLayout"
+                android:layout_width="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginRight="10dp"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:id="@+id/titleUploader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="发布者: "/>
+                <TextView
+                    android:id="@+id/uploaderName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="某某"/>
+            </LinearLayout>
+
             <android.support.constraint.ConstraintLayout
                 android:id="@+id/middleLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
-                <!--<LinearLayout-->
-                <!--android:id="@+id/collectLayout"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_marginTop="8dp"-->
-                <!--android:layout_marginBottom="8dp"-->
-                <!--android:orientation="horizontal"-->
-                <!--app:layout_constraintBottom_toBottomOf="parent"-->
-                <!--app:layout_constraintLeft_toLeftOf="parent"-->
-                <!--app:layout_constraintRight_toRightOf="parent"-->
-                <!--app:layout_constraintTop_toTopOf="parent">-->
-
-                <!--<ImageView-->
-                <!--android:id="@+id/collectImage"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_gravity="center_vertical"-->
-                <!--android:src="@drawable/ic_outline_loyalty_24px" />-->
-
-                <!--<TextView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_gravity="center_vertical"-->
-                <!--android:text="收藏" />-->
-                <!--</LinearLayout>-->
 
                 <LinearLayout
                     android:id="@+id/likeLayout"
@@ -75,7 +67,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:src="@drawable/ic_outline_favorite_border_24px" />
+                        app:srcCompat="@drawable/ic_outline_favorite_border_24px" />
 
                     <TextView
                         android:id="@+id/likeNum"
@@ -102,13 +94,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:src="@drawable/ic_baseline_download_24px" />
+                        app:srcCompat="@drawable/ic_baseline_download_24px" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="下载" />
+                        android:text="设为壁纸" />
                 </LinearLayout>
 
 

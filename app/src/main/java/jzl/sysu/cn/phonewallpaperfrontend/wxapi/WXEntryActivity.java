@@ -20,6 +20,7 @@ import jzl.sysu.cn.phonewallpaperfrontend.Activity.MainActivity;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
 import jzl.sysu.cn.phonewallpaperfrontend.Body.LoginWXBody;
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.LoginResponse;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
@@ -38,45 +39,45 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 
     @Override
     public void onResp(BaseResp baseResp) {
-        Log.i("wxActivity", baseResp.errStr + " " + baseResp.openId + " " + baseResp.errCode + " " + baseResp.transaction + " code: " + ((SendAuth.Resp) baseResp).code);
-        Log.i("wxActivity", baseResp.errCode + " " + BaseResp.ErrCode.ERR_OK + " " + (baseResp.errCode == BaseResp.ErrCode.ERR_OK));
+        Log.v(Constants.LOG_TAG, String.format("is ok: %b, auth code: %s", baseResp.errCode == BaseResp.ErrCode.ERR_OK, ((SendAuth.Resp) baseResp).code));
+
         if (baseResp.errCode == BaseResp.ErrCode.ERR_OK) {
-            final String code = ((SendAuth.Resp) baseResp).code;//需要转换一下才可以
-            Log.i("wxAc", "wx code: " + code);
-            UserService service = ApiManager.getInstance().getUserService();
+        final String code = ((SendAuth.Resp) baseResp).code;//需要转换一下才可以
+        UserService service = ApiManager.getInstance().getUserService();
             LoginWXBody body = new LoginWXBody(code);
             service.loginWX(body)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<LoginResponse>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {}
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<LoginResponse>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {}
 
-                        private void fail() {
-                            Util.showNetworkFailToast(WXEntryActivity.this);
-                            finish();
-                        }
-                        @Override
-                        public void onNext(LoginResponse loginResponse) {
-                            if (loginResponse.isFail()) {
-                                Toast.makeText(WXEntryActivity.this, loginResponse.getMessage() + " " + loginResponse.getCode(), Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            LoginHelper.getInstance().setUserInfo(loginResponse);
-                            Intent intent = new Intent(WXEntryActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
+                    private void fail() {
+                        Util.showNetworkFailToast(WXEntryActivity.this);
+                        finish();
+                    }
+                    @Override
+                    public void onNext(LoginResponse loginResponse) {
+                        if (loginResponse.isFail()) {
+                            Toast.makeText(WXEntryActivity.this, loginResponse.getMessage() + " " + loginResponse.getCode(), Toast.LENGTH_SHORT).show();
+                            return;
                         }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            fail();
-                        }
+                        LoginHelper.getInstance().setUserInfo(loginResponse);
+                        Intent intent = new Intent(WXEntryActivity.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                    }
 
-                        @Override
-                        public void onComplete() {}
-                    });
+                    @Override
+                    public void onError(Throwable e) {
+                        fail();
+                    }
+
+                    @Override
+                    public void onComplete() {}
+                });
         }
     }
 

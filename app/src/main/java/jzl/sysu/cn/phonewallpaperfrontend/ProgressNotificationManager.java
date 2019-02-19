@@ -83,7 +83,6 @@ public class ProgressNotificationManager {
         @Override
         public void onNext(ProgressMessage progressMessage) {
             int progress = progressMessage.getProgress();
-            Log.i("progressListen", "progress: " + progress);
             if (progress == 0) {
                 lastTime = System.currentTimeMillis();
                 showNotification(progress);

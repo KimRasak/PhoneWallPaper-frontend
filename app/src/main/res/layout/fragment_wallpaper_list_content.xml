@@ -1,20 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.aspsine.swipetoloadlayout.SwipeToLoadLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/wallpaper_swipe_layout"
+    android:id="@+id/wallpaper_list_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_gravity="center">
-    <jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView
-        android:id="@+id/swipe_target"
+    android:layout_height="match_parent">
+    <com.aspsine.swipetoloadlayout.SwipeToLoadLayout
+        android:id="@+id/wallpaper_swipe_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+        <jzl.sysu.cn.phonewallpaperfrontend.RecyclerView.AutofitRecyclerView
+            android:id="@+id/swipe_target"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
-    <jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView
-        android:id="@id/swipe_load_more_footer"
+        <jzl.sysu.cn.phonewallpaperfrontend.LoadMoreFooterView
+            android:id="@id/swipe_load_more_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="loading..."/>
+
+    </com.aspsine.swipetoloadlayout.SwipeToLoadLayout>
+
+    <TextView
+        android:id="@+id/tvNetworkError"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:visibility="gone"
         android:gravity="center"
-        android:text="loading..."/>
-
-</com.aspsine.swipetoloadlayout.SwipeToLoadLayout>
+        android:text="网络连接错误,请点击重试"/>
+</LinearLayout>

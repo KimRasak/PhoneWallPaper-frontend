@@ -34,6 +34,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.ApiManager;
 import jzl.sysu.cn.phonewallpaperfrontend.ApiService.UserService;
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.LoginHelper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Response.LoginResponse;
@@ -47,6 +48,12 @@ public class WelcomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);  //去掉状态栏，实现全屏
         setContentView(R.layout.activity_welcome);
+    }
+
+    @Override
+    protected void onResume() {
+        Log.v(Constants.LOG_TAG, "welcomeAc");
+        super.onResume();
     }
 
     @Override
@@ -107,8 +114,6 @@ public class WelcomeActivity extends AppCompatActivity {
                             fail();
                             return;
                         }
-
-                        Log.i("OkHttp", "begin onServerLoggedIn. userId: " + loginResponse.getUserId());
                         // 设置用户个人信息
                         helper.setUserInfo(loginResponse);
 
