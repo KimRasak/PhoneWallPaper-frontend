@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import jzl.sysu.cn.phonewallpaperfrontend.Constants;
 import jzl.sysu.cn.phonewallpaperfrontend.Model.WallPaper;
 import jzl.sysu.cn.phonewallpaperfrontend.R;
 import jzl.sysu.cn.phonewallpaperfrontend.Util;
@@ -64,7 +65,7 @@ public class WallPaperRecyclerViewAdapter extends RecyclerView.Adapter<WallPaper
         String path = wallPaper.getPath();
         String host = hostName;
         String tail = "x-oss-process=image/resize,w_" + imgWidth;
-        String wallpaperSrc = "https://" + host + "/" + path;
+        String wallpaperSrc = "http://" + host + "/" + path;
         String thumb = wallpaperSrc + "?" + tail;
         holder.wallpaperSrc = wallpaperSrc;
         // 加载相应图片

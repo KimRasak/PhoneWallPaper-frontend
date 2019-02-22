@@ -275,7 +275,6 @@ public class UserConfigActivity extends AppCompatActivity {
     // 提交修改请求
     private void commmitNewUserName(final String userName) {
         // 构建请求
-        // 构建请求
         UserService service = ApiManager.getInstance().getUserService();
         UserNameBody body = new UserNameBody(userName);
         Observable<CodeResponse> ob = service.changeUserName(body);

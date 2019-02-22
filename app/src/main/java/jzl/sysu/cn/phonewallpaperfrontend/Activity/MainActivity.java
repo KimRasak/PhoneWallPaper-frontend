@@ -9,6 +9,7 @@ import android.os.Bundle;
 
 import com.ashokvarma.bottomnavigation.BottomNavigationBar;
 import com.ashokvarma.bottomnavigation.BottomNavigationItem;
+import com.baidu.mobstat.StatService;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import java.util.ArrayList;
@@ -44,8 +45,14 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationB
         findView();
         initBottomNavitionBar();
         initViewPager();
-        // initLoginHelper();
-        // initImageLoader();
+        initBaidu();
+    }
+
+    private void initBaidu() {
+        // 由于多进程等可能造成Application多次执行，建议此代码不要埋点在Application中，否则可能造成启动次数偏高
+        // 建议此代码埋点在统计路径触发的第一个页面中，若可能存在多个则建议都埋点
+        StatService.start(this);
+        StatService.setDebugOn(true);
     }
 
     private void findView() {
