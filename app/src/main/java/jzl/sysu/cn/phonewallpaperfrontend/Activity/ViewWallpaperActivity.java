@@ -493,6 +493,7 @@ public class ViewWallpaperActivity extends AppCompatActivity implements Comments
                     public void onNext(ClickResponse response) {
                         List<Comment> comments = response.getComments();
                         boolean isLike = response.getLike();
+                        likeNum = response.getLikeNum();
 
                         ViewWallpaperActivity.this.isLike = isLike;
                         initLikeLayout(isLike, likeNum);

@@ -8,6 +8,7 @@ public class ClickResponse {
     private List<Comment> comments;
     private Boolean like;
     private Boolean collect;
+    private int likeNum;
 
     public List<Comment> getComments() {
         return comments;
@@ -31,5 +32,13 @@ public class ClickResponse {
 
     public void setCollect(Boolean collect) {
         this.collect = collect;
+    }
+
+    public Integer getLikeNum() {
+        return likeNum;
+    }
+
+    public void setLikeNum(Integer likeNum) {
+        this.likeNum = likeNum;
     }
 }

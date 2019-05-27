@@ -55,6 +55,7 @@ public class Util {
         ret.heightPixels = wallpaperManager.getDesiredMinimumHeight();
         return ret;
     }
+
     public static Bitmap centerCrop(Bitmap bitmap, DisplayMetrics screenMetrics) {
         Bitmap containScreen = scaleBitmapToContainScreen(bitmap, screenMetrics);
         return cropCenter(containScreen, screenMetrics);
