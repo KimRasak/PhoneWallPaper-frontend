@@ -3,11 +3,11 @@ package jzl.sysu.cn.phonewallpaperfrontend;
 import okhttp3.MediaType;
 
 public class Constants {
-    public static final String DOMAIN = "www.lqwfg.club";
-    public static final String ECS_PC_IP = "47.106.236.1";
-    public static final String EMULATOR_PC_IP = "10.0.2.2";
-    public static final String HOME_PC_IP = "192.168.101.2";
-    public static final String SCHOOL_PC_IP = "192.168.199.181";
+    public static final String DOMAIN = "www.lqwfg.club";         // 正式用的域名
+    public static final String ECS_PC_IP = "47.106.236.1";        // 调试用, 阿里云ECS服务器的ip
+    public static final String EMULATOR_PC_IP = "10.0.2.2";       // 调试用, 电脑虚拟器的ip
+    public static final String HOME_PC_IP = "192.168.101.2";      // 调试用, 家里的ip
+    public static final String SCHOOL_PC_IP = "192.168.199.181";  // 调试用, 本科学校宿舍的ip
     public static final String PC_IP = DOMAIN ;
 
     // Log.i統一使用tag
